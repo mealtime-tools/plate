@@ -1,0 +1,12 @@
+{
+  "name": "plate",
+  "private": true,
+  "type": "module",
+  "description": "Test harness only. The page itself has no dependencies and no build step: index.html loads the .mjs files directly, and GitHub Pages serves this directory as it stands.",
+  "scripts": {
+    "test": "node --test \"tests/*_test.mjs\""
+  },
+  "devDependencies": {
+    "playwright-core": "^1.58.0"
+  }
+}

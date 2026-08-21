@@ -1,0 +1,495 @@
+/* Mobile first: these links are tapped in a chat app, so the phone layout is
+   the base and the only media queries widen it. System fonts, because a font
+   CDN would be a network request and the CSP forbids one. */
+
+:root {
+  --ink: #1a1a1a;
+  --muted: #5c5c5c;
+  --line: #d4d4d4;
+  --paper: #fdfdfc;
+  --warn: #8a1c1c;
+  --warn-bg: #fdeeee;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 1rem 0.75rem 3rem;
+  background: var(--paper);
+  color: var(--ink);
+  font:
+    16px / 1.5 -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+main {
+  margin: 0 auto;
+  max-width: 40rem;
+}
+
+h1 {
+  margin: 0 0 1rem;
+  font-size: 1.6rem;
+  font-weight: 300;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+code,
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+}
+
+pre {
+  overflow-x: auto;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  background: #fff;
+}
+
+.hint {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* The refusal notice. Loud on purpose: a silently wrong total is the bug this
+   page was rewritten to remove, so its replacement has to be impossible to miss. */
+.alert {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--warn);
+  border-radius: 0.35rem;
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.alert h2 {
+  font-size: 1rem;
+}
+
+.alert ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.alert p {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+}
+
+.alert p:empty {
+  display: none;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.controls label {
+  font-weight: 600;
+}
+
+.controls input {
+  width: 5rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  background: #fff;
+  color: inherit;
+  /* 16px keeps iOS Safari from zooming the whole page on focus. */
+  font: inherit;
+}
+
+#export {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+#download {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* A six-column table cannot shrink below legibility, so it scrolls instead. */
+.scroll {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 26rem) {
+  table {
+    font-size: 0.8rem;
+  }
+}
+
+caption {
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+th,
+td {
+  padding: 0.4rem 0.35rem;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+  white-space: nowrap;
+}
+
+thead th {
+  border-bottom-width: 2px;
+  font-weight: 600;
+}
+
+th.name {
+  min-width: 6rem;
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
+}
+
+tfoot th,
+tfoot td {
+  border-bottom: none;
+  font-weight: 600;
+}
+
+.abbr {
+  cursor: help;
+}
+
+tr.incomplete th.name::after {
+  content: " (incomplete)";
+  color: var(--warn);
+  font-size: 0.8em;
+}
+
+.refusal {
+  color: var(--warn);
+  font-weight: 600;
+  text-align: left;
+  white-space: normal;
+}
+
+#summary {
+  margin-bottom: 1.5rem;
+}
+
+#notes {
+  margin-bottom: 1.5rem;
+}
+
+#notes-body {
+  /* The notes field is authored as multi-line text; keep every break. */
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+#qr svg {
+  display: block;
+  width: 100%;
+  max-width: 14rem;
+  height: auto;
+  margin: 0 auto;
+  /* Anti-aliased module edges are what makes a small QR fail to scan. */
+  shape-rendering: crispEdges;
+}
+
+#qr rect {
+  fill: #fff;
+}
+
+#qr path {
+  fill: #000;
+}
+
+.print-only {
+  display: none;
+}
+
+/* Editor styles shared by the static composer and served mode. */
+.editor-nav {
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  background: #fff;
+}
+
+.editor-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.editor-row label {
+  font-weight: 600;
+}
+
+.editor-row select {
+  flex: 1;
+  min-width: 10rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  font: inherit;
+}
+
+.editor-row button {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+#save-recipe-btn {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.save-status {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.editor-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.meta-field {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.meta-field label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.meta-field input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  font: inherit;
+}
+
+@media (min-width: 36rem) {
+  .editor-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.editor-tools {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.product-search-panel,
+.manual-ingredient-panel {
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  background: #fff;
+}
+
+.product-search-panel h2,
+.manual-ingredient-panel h2 {
+  margin-top: 0;
+  font-size: 0.95rem;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-row input[type="search"] {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  font: inherit;
+}
+
+.search-row button {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.remote-label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.search-results {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.search-results li {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.search-results li button {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.manual-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.manual-grid input {
+  padding: 0.35rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.manual-grid button {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.grams-input {
+  width: 4.5rem;
+  padding: 0.2rem 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 0.2rem;
+  font: inherit;
+  text-align: right;
+}
+
+.remove-ingredient-btn {
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 0.2rem;
+  background: none;
+  color: var(--warn);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+#notes-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+/* The print block re-shows .print-only, so `hidden` needs to outrank it. */
+[hidden] {
+  display: none !important;
+}
+
+/* Print gives PDF export for free, which is why there is no print window and no
+   cloned-stylesheet trick like the page this replaces used. */
+@media print {
+  body {
+    padding: 0;
+    background: #fff;
+    font-size: 11pt;
+  }
+
+  .controls,
+  .hint,
+  #export,
+  .editor-nav,
+  .editor-tools,
+  #notes-edit,
+  .action-cell,
+  .action-col {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .scroll {
+    overflow: visible;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  #qr svg {
+    max-width: 6cm;
+  }
+}

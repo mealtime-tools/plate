@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- The whole point of the self-contained share link is that opening a recipe
+       talks to nobody. `default-src 'none'` makes that a browser-enforced fact
+       rather than a promise: no CDN, no font host, no QR service, no analytics.
+       `data:` is only there for the empty favicon that suppresses /favicon.ico.
+       `connect-src 'self'` allows talking only to the local plate API server. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+
+  <title>Recipe</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.mjs"></script>
+</head>
+
+<body>
+  <main>
+    <section id="editor-nav" class="editor-nav" hidden>
+      <div class="editor-row server-only" hidden>
+        <label for="recipe-select">Recipe</label>
+        <select id="recipe-select">
+          <option value="">(Choose stored recipe)</option>
+        </select>
+        <button id="save-recipe-btn" type="button">
+          Save
+        </button>
+        <span id="save-status" class="save-status"></span>
+      </div>
+      <div class="editor-meta">
+        <div class="meta-field">
+          <label for="recipe-name-input">Name</label>
+          <input id="recipe-name-input" type="text" placeholder="Recipe Name">
+        </div>
+        <div class="meta-field">
+          <label for="tags-input">Tags</label>
+          <input id="tags-input" type="text" placeholder="dinner, quick">
+        </div>
+      </div>
+    </section>
+
+    <h1 id="recipe-name">Recipe</h1>
+
+    <!-- Failure comes first in the document so it is the first thing read out,
+         and the first thing seen on a phone, whatever else rendered. -->
+    <section id="alert" class="alert" hidden>
+      <h2 id="alert-title">Problem with this link</h2>
+      <ul id="alert-list"></ul>
+      <p id="alert-note"></p>
+    </section>
+
+    <section id="recipe" hidden>
+      <div id="controls" class="controls">
+        <label for="servings">Servings</label>
+        <input id="servings" type="number" min="1" max="999" step="1" value="1" inputmode="numeric">
+      </div>
+      <p id="servings-line" class="print-only">Servings: <span id="servings-print">1</span></p>
+
+      <p id="no-ingredients" hidden>This recipe carries no ingredients.</p>
+
+      <div id="ingredients-panel" class="scroll">
+        <table id="ingredients">
+          <caption>Ingredients</caption>
+          <thead>
+            <tr id="ingredients-header-row">
+              <th scope="col">Ingredient</th>
+              <th scope="col">g</th>
+              <th scope="col">kcal</th>
+              <th scope="col" class="abbr" title="Protein, grams">P</th>
+              <th scope="col" class="abbr" title="Carbohydrate, grams">C</th>
+              <th scope="col" class="abbr" title="Fat, grams">F</th>
+            </tr>
+          </thead>
+          <tbody id="ingredient-rows"></tbody>
+          <tfoot id="ingredient-total"></tfoot>
+        </table>
+      </div>
+
+      <div id="editor-tools" class="editor-tools" hidden>
+        <div class="product-search-panel server-only" hidden>
+          <h2>Search Products</h2>
+          <div class="search-row">
+            <input id="product-search-input" type="search" placeholder="Search database...">
+            <button id="product-search-btn" type="button">Search</button>
+            <label class="remote-label"><input id="product-search-remote" type="checkbox"> Remote</label>
+          </div>
+          <ul id="product-search-results" class="search-results"></ul>
+        </div>
+        <div class="manual-ingredient-panel">
+          <h2>Add Manual Ingredient</h2>
+          <div class="manual-grid">
+            <input id="manual-name" type="text" placeholder="Name">
+            <input id="manual-grams" type="number" min="0" step="any" placeholder="Grams">
+            <input id="manual-kcal" type="number" min="0" step="any" placeholder="kcal/100g">
+            <input id="manual-protein" type="number" min="0" step="any" placeholder="P/100g">
+            <input id="manual-carbs" type="number" min="0" step="any" placeholder="C/100g">
+            <input id="manual-fat" type="number" min="0" step="any" placeholder="F/100g">
+            <button id="manual-add-btn" type="button">Add</button>
+          </div>
+        </div>
+      </div>
+
+      <table id="summary" hidden>
+        <caption>Nutrition</caption>
+        <thead>
+          <tr>
+            <th scope="col"></th>
+            <th scope="col">Whole recipe</th>
+            <th scope="col">Per serving</th>
+            <th scope="col">Per 100 g</th>
+          </tr>
+        </thead>
+        <tbody id="summary-rows"></tbody>
+      </table>
+
+      <section id="notes" hidden>
+        <h2>Notes</h2>
+        <p id="notes-body"></p>
+        <div id="notes-edit" hidden>
+          <textarea id="notes-input" rows="4" placeholder="Method or notes..."></textarea>
+        </div>
+      </section>
+
+      <!-- Only offered for a recipe this page was willing to total: a YAML file
+           with a silently missing macro gets saved, reused and trusted, which is
+           worse than the refusal shown on screen. -->
+      <section id="export" hidden>
+        <button id="download" type="button">Download as YAML</button>
+        <p id="download-hint" class="hint">Saves one file for your own
+          <code>~/.config/recipes/</code> directory.</p>
+      </section>
+
+      <section id="qr" hidden>
+        <div id="qr-code"></div>
+        <p class="hint">Scan to open this recipe on another device.</p>
+      </section>
+    </section>
+  </main>
+</body>
+
+</html>
