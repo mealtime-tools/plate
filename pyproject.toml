@@ -34,6 +34,11 @@ packages = ["src/plate"]
 # a file that is missing from the wheel would skip instead of checking.
 "fixtures/exported-example.yaml" = "plate/fixtures/exported-example.yaml"
 
+# The locator suite needs pytest. It was absent, so CI could not run the
+# suite that a green local venv had been running all along.
+[dependency-groups]
+dev = ["pytest>=8"]
+
 [tool.pytest.ini_options]
 testpaths = ["src/plate"]
 python_files = ["*_test.py"]
