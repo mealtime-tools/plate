@@ -250,7 +250,9 @@ test("served mode editor renders and edits update totals live", async () => {
     "",
   ]);
 
-  // Search product and add Mozzarella
+  // Search product and add Mozzarella. A recipe that has ingredients opens with
+  // the editing tools collapsed, so expand them first.
+  await page.locator("#editor-tools summary").click();
   await page.locator("#product-search-input").fill("mozzarella");
   await page.locator("#product-search-btn").click();
   await page.locator("#product-search-results li button").first().click();
@@ -348,6 +350,126 @@ test("saving invalid recipe surfaces backend errors", async () => {
     await page.locator("#alert-list").textContent(),
     /coles:999 was not found/,
   );
+
+  await page.close();
+});
+
+const STORED_INGREDIENTS = {
+  rice: {
+    name: "Rice",
+    grams: 200,
+    macros: { kcal: 130, protein: 2.7, fat: 0.3, carbs: 28 },
+  },
+  peanuts: {
+    name: "Peanuts",
+    grams: 30,
+    macros: { kcal: 567, protein: 25.8, fat: 49.2, carbs: 16.1 },
+  },
+};
+
+/**
+ * A served-mode page backed by stored recipes, keyed by name. The first key is
+ * the candidate the editor loads by itself, the way it picks the first name a
+ * real backend lists.
+ */
+async function servedPage(stored) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const json = (body) => ({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify(body),
+  });
+
+  await page.route("**/api/health", (route) =>
+    route.fulfill(json({ ok: true, recipe_dir: "/mock/recipes" })),
+  );
+  await page.route("**/api/recipes", (route) =>
+    route.fulfill(json(Object.keys(stored).map((name) => ({ name })))),
+  );
+  await page.route("**/api/recipes/*", (route) => {
+    const name = decodeURIComponent(
+      new URL(route.request().url()).pathname.split("/").pop(),
+    );
+    return route.fulfill(json(stored[name]));
+  });
+
+  await page.goto(`${site.origin}/`);
+  await page.waitForFunction(
+    () => !document.getElementById("editor-nav").hidden,
+  );
+  return page;
+}
+
+const storedRecipe = (name, ingredients) => ({
+  name,
+  servings: 1,
+  ingredients,
+});
+
+const named = (page, name) =>
+  page.waitForFunction(
+    (wanted) =>
+      document.getElementById("recipe-name").textContent === wanted,
+    name,
+  );
+
+const toolsOpen = (page) =>
+  page.locator("#editor-tools").evaluate((el) => el.open);
+
+/**
+ * The only path where collapsing is observable: static mode renders once into
+ * a disclosure the markup already left closed, so nothing there can tell the
+ * collapse apart from its absence.
+ */
+test("switching to a stored recipe with ingredients collapses the tools", async () => {
+  const page = await servedPage({
+    "Empty Draft": storedRecipe("Empty Draft", []),
+    Congee: storedRecipe("Congee", [STORED_INGREDIENTS.rice]),
+  });
+
+  await named(page, "Empty Draft");
+  assert.equal(
+    await toolsOpen(page),
+    true,
+    "a stored recipe with no ingredients has nothing to view, so it opens",
+  );
+  assert.ok(await page.locator("#manual-name").isVisible());
+
+  await page.selectOption("#recipe-select", "Congee");
+  await named(page, "Congee");
+
+  assert.equal(
+    await toolsOpen(page),
+    false,
+    "arriving at a recipe that has something to view must collapse the tools",
+  );
+  assert.ok(await page.locator("#manual-name").isHidden());
+
+  await page.close();
+});
+
+test("an edit that leaves ingredients in place leaves the tools alone", async () => {
+  const page = await servedPage({
+    Congee: storedRecipe("Congee", [
+      STORED_INGREDIENTS.rice,
+      STORED_INGREDIENTS.peanuts,
+    ]),
+  });
+
+  await named(page, "Congee");
+  assert.equal(await toolsOpen(page), false);
+
+  await page.locator(".remove-ingredient-btn").first().click();
+  await page.waitForFunction(
+    () => document.querySelectorAll("#ingredient-rows tr").length === 1,
+  );
+
+  assert.equal(
+    await toolsOpen(page),
+    false,
+    "one ingredient still remains: the empty state must not open the tools",
+  );
+  assert.ok(await page.locator("#manual-name").isHidden());
 
   await page.close();
 });

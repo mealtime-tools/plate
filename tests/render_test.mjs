@@ -247,6 +247,148 @@ test("the static page composes and shares a recipe without an API", async () => 
   await page.close();
 });
 
+test("opening a recipe with ingredients keeps the editing tools collapsed", async () => {
+  const { page, errors } = await open(`#r=${encoded("minimal")}`);
+
+  assert.deepEqual(errors, []);
+  assert.ok(
+    await page.locator("#editor-tools").isVisible(),
+    "the disclosure itself stays on the page",
+  );
+  assert.ok(
+    await page.locator("#manual-name").isHidden(),
+    "opening a recipe is for viewing: the data-entry grid starts closed",
+  );
+
+  await page.locator("#editor-tools summary").click();
+  assert.ok(await page.locator("#manual-name").isVisible());
+
+  await page.close();
+});
+
+test("a recipe with nothing to view opens the editing tools", async () => {
+  for (const hash of [`#r=${encoded("empty")}`, ""]) {
+    const { page, errors } = await open(hash);
+
+    assert.deepEqual(errors, []);
+    assert.ok(
+      await page.locator("#manual-name").isVisible(),
+      `an empty recipe must not be a dead end (${hash || "no hash"})`,
+    );
+
+    await page.close();
+  }
+});
+
+test("the editing tools stay open while an ingredient is added", async () => {
+  const { page, errors } = await open(`#r=${encoded("minimal")}`);
+
+  await page.locator("#editor-tools summary").click();
+  await page.locator("#manual-name").fill("Butter");
+  await page.locator("#manual-grams").fill("10");
+  await page.locator("#manual-kcal").fill("717");
+  await page.locator("#manual-protein").fill("0.9");
+  await page.locator("#manual-carbs").fill("0.1");
+  await page.locator("#manual-fat").fill("81.1");
+  const hashBeforeIngredient = new URL(page.url()).hash;
+  await page.locator("#manual-add-btn").click();
+  await page.waitForFunction(
+    (previous) => window.location.hash !== previous,
+    hashBeforeIngredient,
+  );
+
+  assert.deepEqual(errors, []);
+  assert.equal(await page.locator("#ingredient-rows tr").count(), 2);
+  assert.ok(
+    await page.locator("#manual-name").isVisible(),
+    "adding an ingredient must not collapse the panel mid-edit",
+  );
+
+  await page.close();
+});
+
+test("the editing tools disclosure is operable by keyboard", async () => {
+  const { page } = await open(`#r=${encoded("minimal")}`);
+
+  const summary = page.locator("#editor-tools summary");
+  await summary.focus();
+  assert.ok(
+    await page.evaluate(
+      () =>
+        document.activeElement ===
+        document.querySelector("#editor-tools summary"),
+    ),
+    "the summary must be reachable by keyboard focus",
+  );
+
+  await page.keyboard.press("Enter");
+  assert.ok(await page.locator("#manual-name").isVisible());
+  await page.keyboard.press("Enter");
+  assert.ok(await page.locator("#manual-name").isHidden());
+
+  await page.close();
+});
+
+test("removing the last ingredient opens the editing tools", async () => {
+  const { page, errors } = await open(`#r=${encoded("minimal")}`);
+
+  assert.ok(
+    await page.locator("#manual-name").isHidden(),
+    "a recipe with an ingredient starts collapsed",
+  );
+
+  await page.locator(".remove-ingredient-btn").first().click();
+  await page.waitForFunction(
+    () => !document.getElementById("no-ingredients").hidden,
+  );
+
+  assert.deepEqual(errors, []);
+  assert.ok(
+    await page.locator("#manual-name").isVisible(),
+    "emptying a recipe must not leave a collapsed panel and a dead end",
+  );
+
+  await page.close();
+});
+
+test("the two editing panels keep the gap between them", async () => {
+  const { page } = await open(`#r=${encoded("minimal")}`);
+
+  // Collapsed, the disclosure is its summary and nothing else: a flex gap
+  // stranded under the closed control reads as unexplained dead space.
+  const closed = await page.evaluate(() => {
+    const tools = document.getElementById("editor-tools");
+    return {
+      tools: tools.getBoundingClientRect().height,
+      summary: tools.querySelector("summary").getBoundingClientRect().height,
+    };
+  });
+  assert.ok(
+    Math.abs(closed.tools - closed.summary) < 1,
+    `collapsed tools ${closed.tools}px should match summary ${closed.summary}px`,
+  );
+
+  // Both panels only ever show together in served mode, which is the only
+  // place the gap between them is visible.
+  const gap = await page.evaluate(() => {
+    document.querySelector(".product-search-panel").hidden = false;
+    document.getElementById("editor-tools").open = true;
+    const search = document
+      .querySelector(".product-search-panel")
+      .getBoundingClientRect();
+    const manual = document
+      .querySelector(".manual-ingredient-panel")
+      .getBoundingClientRect();
+    return manual.top - search.bottom;
+  });
+  assert.ok(
+    Math.abs(gap - 20) < 1,
+    `the panels should stay 1.25rem apart, measured ${gap}px`,
+  );
+
+  await page.close();
+});
+
 test("a truncated fragment shows the error state and no total", async () => {
   const value = encoded("servings-and-notes");
   const { page, errors } = await open(`#r=${value.slice(0, 60)}`);
