@@ -324,15 +324,21 @@ tr.incomplete th.name::after {
 .editor-tools {
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
 }
 
 .editor-tools > summary {
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 600;
+}
+
+/* The panels are one flex item inside the disclosure's content box, so the gap
+   belongs to a wrapper around them, not to .editor-tools. */
+.editor-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
 }
 
 .product-search-panel,

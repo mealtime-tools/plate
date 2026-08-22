@@ -329,6 +329,66 @@ test("the editing tools disclosure is operable by keyboard", async () => {
   await page.close();
 });
 
+test("removing the last ingredient opens the editing tools", async () => {
+  const { page, errors } = await open(`#r=${encoded("minimal")}`);
+
+  assert.ok(
+    await page.locator("#manual-name").isHidden(),
+    "a recipe with an ingredient starts collapsed",
+  );
+
+  await page.locator(".remove-ingredient-btn").first().click();
+  await page.waitForFunction(
+    () => !document.getElementById("no-ingredients").hidden,
+  );
+
+  assert.deepEqual(errors, []);
+  assert.ok(
+    await page.locator("#manual-name").isVisible(),
+    "emptying a recipe must not leave a collapsed panel and a dead end",
+  );
+
+  await page.close();
+});
+
+test("the two editing panels keep the gap between them", async () => {
+  const { page } = await open(`#r=${encoded("minimal")}`);
+
+  // Collapsed, the disclosure is its summary and nothing else: a flex gap
+  // stranded under the closed control reads as unexplained dead space.
+  const closed = await page.evaluate(() => {
+    const tools = document.getElementById("editor-tools");
+    return {
+      tools: tools.getBoundingClientRect().height,
+      summary: tools.querySelector("summary").getBoundingClientRect().height,
+    };
+  });
+  assert.ok(
+    Math.abs(closed.tools - closed.summary) < 1,
+    `collapsed tools ${closed.tools}px should match summary ${closed.summary}px`,
+  );
+
+  // Both panels only ever show together in served mode, which is the only
+  // place the gap between them is visible.
+  const gap = await page.evaluate(() => {
+    document.querySelector(".product-search-panel").hidden = false;
+    document.getElementById("editor-tools").open = true;
+    const search = document
+      .querySelector(".product-search-panel")
+      .getBoundingClientRect();
+    const manual = document
+      .querySelector(".manual-ingredient-panel")
+      .getBoundingClientRect();
+    return manual.top - search.bottom;
+  });
+  assert.ok(
+    Math.abs(gap - 20) < 1,
+    `the panels should stay 1.25rem apart, measured ${gap}px`,
+  );
+
+  await page.close();
+});
+
 test("a truncated fragment shows the error state and no total", async () => {
   const value = encoded("servings-and-notes");
   const { page, errors } = await open(`#r=${value.slice(0, 60)}`);

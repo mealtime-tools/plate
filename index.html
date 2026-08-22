@@ -82,25 +82,27 @@
 
       <details id="editor-tools" class="editor-tools" hidden>
         <summary>Add ingredients</summary>
-        <div class="product-search-panel server-only" hidden>
-          <h2>Search Products</h2>
-          <div class="search-row">
-            <input id="product-search-input" type="search" placeholder="Search database...">
-            <button id="product-search-btn" type="button">Search</button>
-            <label class="remote-label"><input id="product-search-remote" type="checkbox"> Remote</label>
+        <div class="editor-panels">
+          <div class="product-search-panel server-only" hidden>
+            <h2>Search Products</h2>
+            <div class="search-row">
+              <input id="product-search-input" type="search" placeholder="Search database...">
+              <button id="product-search-btn" type="button">Search</button>
+              <label class="remote-label"><input id="product-search-remote" type="checkbox"> Remote</label>
+            </div>
+            <ul id="product-search-results" class="search-results"></ul>
           </div>
-          <ul id="product-search-results" class="search-results"></ul>
-        </div>
-        <div class="manual-ingredient-panel">
-          <h2>Add Manual Ingredient</h2>
-          <div class="manual-grid">
-            <input id="manual-name" type="text" placeholder="Name">
-            <input id="manual-grams" type="number" min="0" step="any" placeholder="Grams">
-            <input id="manual-kcal" type="number" min="0" step="any" placeholder="kcal/100g">
-            <input id="manual-protein" type="number" min="0" step="any" placeholder="P/100g">
-            <input id="manual-carbs" type="number" min="0" step="any" placeholder="C/100g">
-            <input id="manual-fat" type="number" min="0" step="any" placeholder="F/100g">
-            <button id="manual-add-btn" type="button">Add</button>
+          <div class="manual-ingredient-panel">
+            <h2>Add Manual Ingredient</h2>
+            <div class="manual-grid">
+              <input id="manual-name" type="text" placeholder="Name">
+              <input id="manual-grams" type="number" min="0" step="any" placeholder="Grams">
+              <input id="manual-kcal" type="number" min="0" step="any" placeholder="kcal/100g">
+              <input id="manual-protein" type="number" min="0" step="any" placeholder="P/100g">
+              <input id="manual-carbs" type="number" min="0" step="any" placeholder="C/100g">
+              <input id="manual-fat" type="number" min="0" step="any" placeholder="F/100g">
+              <button id="manual-add-btn" type="button">Add</button>
+            </div>
           </div>
         </div>
       </details>

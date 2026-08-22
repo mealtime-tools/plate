@@ -216,6 +216,23 @@ function updateIngredientMissing(ingredient) {
   ingredient.missing = missing;
 }
 
+/**
+ * Render the empty-recipe state and keep the editing tools reachable.
+ *
+ * This only ever opens the disclosure: nothing to view means nothing to
+ * collapse for, and an edit that leaves ingredients in place must not close the
+ * panel the user is typing in. Collapsing is renderRecipe's job alone.
+ */
+function renderEmptyState(recipe) {
+  const empty = recipe.ingredients.length === 0;
+  dom("no-ingredients").hidden = !empty;
+  dom("ingredients-panel").hidden = empty;
+
+  if (empty) dom("editor-tools").open = true;
+
+  return empty;
+}
+
 function updateProblemsAndTotals() {
   if (!currentRecipe) return;
 
@@ -232,9 +249,7 @@ function updateProblemsAndTotals() {
     alert.hidden = true;
   }
 
-  const empty = currentRecipe.ingredients.length === 0;
-  dom("no-ingredients").hidden = !empty;
-  dom("ingredients-panel").hidden = empty;
+  const empty = renderEmptyState(currentRecipe);
 
   const totals = empty ? null : recipeTotals(currentRecipe);
   renderIngredientTotal(totals);
@@ -399,15 +414,12 @@ function renderRecipe(recipe) {
     dom("alert").hidden = true;
   }
 
-  const empty = recipe.ingredients.length === 0;
-  dom("no-ingredients").hidden = !empty;
-  dom("ingredients-panel").hidden = empty;
+  const empty = renderEmptyState(recipe);
 
-  // Opening a recipe is for viewing, so the editing tools start closed. An
-  // empty recipe has nothing to view, and a closed panel would leave it a dead
-  // end. Only set here: renderRecipe runs when a different recipe arrives, so
-  // an edit can never collapse the panel the user is typing in.
-  dom("editor-tools").open = empty;
+  // Opening a recipe is for viewing, so a recipe that has something to show
+  // starts collapsed. This is the only place that collapses, and it runs only
+  // when a different recipe arrives, never on an edit.
+  if (!empty) dom("editor-tools").open = false;
 
   const totals = empty ? null : recipeTotals(recipe);
   renderIngredients(recipe);
