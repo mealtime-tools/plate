@@ -403,6 +403,12 @@ function renderRecipe(recipe) {
   dom("no-ingredients").hidden = !empty;
   dom("ingredients-panel").hidden = empty;
 
+  // Opening a recipe is for viewing, so the editing tools start closed. An
+  // empty recipe has nothing to view, and a closed panel would leave it a dead
+  // end. Only set here: renderRecipe runs when a different recipe arrives, so
+  // an edit can never collapse the panel the user is typing in.
+  dom("editor-tools").open = empty;
+
   const totals = empty ? null : recipeTotals(recipe);
   renderIngredients(recipe);
   renderIngredientTotal(totals);

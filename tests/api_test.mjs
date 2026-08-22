@@ -250,7 +250,9 @@ test("served mode editor renders and edits update totals live", async () => {
     "",
   ]);
 
-  // Search product and add Mozzarella
+  // Search product and add Mozzarella. A recipe that has ingredients opens with
+  // the editing tools collapsed, so expand them first.
+  await page.locator("#editor-tools summary").click();
   await page.locator("#product-search-input").fill("mozzarella");
   await page.locator("#product-search-btn").click();
   await page.locator("#product-search-results li button").first().click();
