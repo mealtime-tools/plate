@@ -120,21 +120,6 @@ pre {
   font: inherit;
 }
 
-#export {
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-#download {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--line);
-  border-radius: 0.25rem;
-  background: #fff;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
 /* A six-column table cannot shrink below legibility, so it scrolls instead. */
 .scroll {
   overflow-x: auto;
@@ -216,24 +201,6 @@ tr.incomplete th.name::after {
   white-space: pre-wrap;
 }
 
-#qr svg {
-  display: block;
-  width: 100%;
-  max-width: 14rem;
-  height: auto;
-  margin: 0 auto;
-  /* Anti-aliased module edges are what makes a small QR fail to scan. */
-  shape-rendering: crispEdges;
-}
-
-#qr rect {
-  fill: #fff;
-}
-
-#qr path {
-  fill: #000;
-}
-
 .print-only {
   display: none;
 }
@@ -245,47 +212,6 @@ tr.incomplete th.name::after {
   border: 1px solid var(--line);
   border-radius: 0.35rem;
   background: #fff;
-}
-
-.editor-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.editor-row label {
-  font-weight: 600;
-}
-
-.editor-row select {
-  flex: 1;
-  min-width: 10rem;
-  padding: 0.35rem 0.5rem;
-  border: 1px solid var(--line);
-  border-radius: 0.25rem;
-  font: inherit;
-}
-
-.editor-row button {
-  padding: 0.35rem 0.75rem;
-  border: 1px solid var(--line);
-  border-radius: 0.25rem;
-  background: #fff;
-  font: inherit;
-  cursor: pointer;
-}
-
-#save-recipe-btn {
-  background: var(--ink);
-  color: #fff;
-  border-color: var(--ink);
-}
-
-.save-status {
-  font-size: 0.85rem;
-  color: var(--muted);
 }
 
 .editor-meta {
@@ -341,7 +267,6 @@ tr.incomplete th.name::after {
   margin-top: 1.25rem;
 }
 
-.product-search-panel,
 .manual-ingredient-panel {
   padding: 0.75rem;
   border: 1px solid var(--line);
@@ -349,66 +274,9 @@ tr.incomplete th.name::after {
   background: #fff;
 }
 
-.product-search-panel h2,
 .manual-ingredient-panel h2 {
   margin-top: 0;
   font-size: 0.95rem;
-}
-
-.search-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.search-row input[type="search"] {
-  flex: 1;
-  padding: 0.35rem 0.5rem;
-  border: 1px solid var(--line);
-  border-radius: 0.25rem;
-  font: inherit;
-}
-
-.search-row button {
-  padding: 0.35rem 0.75rem;
-  border: 1px solid var(--line);
-  border-radius: 0.25rem;
-  background: #fff;
-  font: inherit;
-  cursor: pointer;
-}
-
-.remote-label {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.85rem;
-}
-
-.search-results {
-  list-style: none;
-  margin: 0.5rem 0 0;
-  padding: 0;
-  max-height: 12rem;
-  overflow-y: auto;
-}
-
-.search-results li {
-  padding: 0.4rem 0.5rem;
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
-}
-
-.search-results li button {
-  padding: 0.2rem 0.5rem;
-  font-size: 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: 0.25rem;
-  background: #fff;
-  cursor: pointer;
 }
 
 .manual-grid {
@@ -480,7 +348,6 @@ tr.incomplete th.name::after {
 
   .controls,
   .hint,
-  #export,
   .editor-nav,
   .editor-tools,
   #notes-edit,
@@ -499,9 +366,5 @@ tr.incomplete th.name::after {
 
   tr {
     break-inside: avoid;
-  }
-
-  #qr svg {
-    max-width: 6cm;
   }
 }

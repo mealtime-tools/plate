@@ -4,12 +4,10 @@
 //
 // Wire format (README.md, "Share URL wire format"):
 //   #r=<base64url(raw_deflate(compact_json))>, `=` padding stripped
-//   {"v":1,"n":name,"s":servings,"t":notes,"i":[[name,grams,kcal,protein,fat,carbs]]}
-// Macros are per 100 g, never pre-scaled -- the same rule the pantry records
-// follow, so a payload can be built straight from a record without arithmetic.
+//   {"name":...,"servings":...,"ingredients":[{"name":...,"grams":...,"kcal":...,...}]}
+// Nutrients describe each whole ingredient. Totals are therefore simple sums.
 
 export const FRAGMENT_KEY = "r";
-export const PAYLOAD_VERSION = 1;
 
 /** A payload we refuse to render, with a message meant for a human. */
 export class ShareError extends Error {}
@@ -116,6 +114,7 @@ export async function encodePayload(payload) {
 }
 
 const MACRO_KEYS = ["kcal", "protein", "fat", "carbs"];
+const NUTRIENT_KEYS = [...MACRO_KEYS, "fiber", "sodium", "sugar"];
 
 /** A finite number, or null. Strings and nulls are not coerced: see readRecipe. */
 function finiteOrNull(value) {
@@ -128,25 +127,24 @@ function finiteOrNull(value) {
  * zero is what silently under-counted a 450 g recipe in the old page.
  */
 function readIngredient(entry, index) {
-  const row = Array.isArray(entry) ? entry : [];
+  const row = entry && typeof entry === "object" && !Array.isArray(entry) ? entry : {};
   const label =
-    typeof row[0] === "string" && row[0].trim()
-      ? row[0].trim()
+    typeof row.name === "string" && row.name.trim()
+      ? row.name.trim()
       : `Ingredient ${index + 1}`;
 
-  const grams = finiteOrNull(row[1]);
-  const per100 = {};
+  const grams = finiteOrNull(row.grams) ?? 100;
+  const nutrients = {};
   const missing = [];
 
-  // Payload order is [name, grams, kcal, protein, fat, carbs].
-  MACRO_KEYS.forEach((key, offset) => {
-    const value = finiteOrNull(row[2 + offset]);
-    if (value === null) missing.push(key);
-    per100[key] = value;
+  NUTRIENT_KEYS.forEach((key) => {
+    const value = finiteOrNull(row[key]);
+    if (value === null && MACRO_KEYS.includes(key)) missing.push(key);
+    nutrients[key] = value;
   });
 
-  if (grams === null) missing.unshift("grams");
-  return { name: label, grams, per100, missing };
+  if (grams <= 0) missing.unshift("grams");
+  return { name: label, grams, ...nutrients, missing };
 }
 
 /**
@@ -158,30 +156,23 @@ function readIngredient(entry, index) {
  * by accident.
  */
 export function readRecipe(payload) {
-  if (payload.v !== PAYLOAD_VERSION) {
-    throw new ShareError(
-      `This link uses share format v${payload.v ?? "?"}; this page understands v${PAYLOAD_VERSION}.`,
-    );
-  }
-
-  if (payload.i !== undefined && !Array.isArray(payload.i)) {
+  if (payload.ingredients !== undefined && !Array.isArray(payload.ingredients)) {
     throw new ShareError("The link's ingredient list is malformed.");
   }
-  if (payload.g !== undefined && !Array.isArray(payload.g)) {
+  if (payload.tags !== undefined && !Array.isArray(payload.tags)) {
     throw new ShareError("The link's tag list is malformed.");
   }
 
-  const ingredients = (payload.i ?? []).map(readIngredient);
+  const ingredients = (payload.ingredients ?? []).map(readIngredient);
   const problems = ingredients
     .filter((item) => item.missing.length)
     .map((item) => `${item.name} is missing ${item.missing.join(", ")}.`);
 
-  // `n`/`t` are omitted when empty and `s` when 1, so every default is applied here.
   return {
-    name: typeof payload.n === "string" ? payload.n : "",
-    notes: typeof payload.t === "string" ? payload.t : "",
-    servings: readServings(payload.s),
-    tags: (payload.g ?? [])
+    name: typeof payload.name === "string" ? payload.name : "",
+    notes: typeof payload.notes === "string" ? payload.notes : "",
+    servings: readServings(payload.servings),
+    tags: (payload.tags ?? [])
       .filter((tag) => typeof tag === "string")
       .map((tag) => tag.trim())
       .filter(Boolean),
@@ -192,23 +183,19 @@ export function readRecipe(payload) {
 
 /** An editor recipe -> the compact, versioned object carried by a share URL. */
 export function recipeToPayload(recipe) {
-  const payload = {
-    v: PAYLOAD_VERSION,
-    i: recipe.ingredients.map((ingredient) => [
-      ingredient.name,
-      ingredient.grams,
-      ingredient.per100.kcal,
-      ingredient.per100.protein,
-      ingredient.per100.fat,
-      ingredient.per100.carbs,
-    ]),
+  return {
+    name: recipe.name,
+    servings: recipe.servings,
+    notes: recipe.notes,
+    tags: recipe.tags ?? [],
+    ingredients: recipe.ingredients.map((ingredient) => ({
+      name: ingredient.name,
+      grams: ingredient.grams,
+      ...Object.fromEntries(
+        NUTRIENT_KEYS.map((key) => [key, ingredient[key] ?? null]),
+      ),
+    })),
   };
-
-  if (recipe.name) payload.n = recipe.name;
-  if (recipe.servings !== 1) payload.s = recipe.servings;
-  if (recipe.notes) payload.t = recipe.notes;
-  if (recipe.tags?.length) payload.g = recipe.tags;
-  return payload;
 }
 
 /** Servings must be a positive integer; anything else falls back to 1. */
@@ -218,14 +205,10 @@ function readServings(value) {
   return Math.floor(count);
 }
 
-/** Macros for an ingredient's actual weight. Null grams or macro yields null. */
+/** Nutrients for an ingredient's actual weight. */
 export function scaleIngredient(ingredient) {
   if (ingredient.missing.length) return null;
-
-  const ratio = ingredient.grams / 100;
-  return Object.fromEntries(
-    MACRO_KEYS.map((key) => [key, ingredient.per100[key] * ratio]),
-  );
+  return Object.fromEntries(MACRO_KEYS.map((key) => [key, ingredient[key]]));
 }
 
 /**

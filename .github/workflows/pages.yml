@@ -26,7 +26,7 @@ jobs:
       - name: Build the static artifact
         run: |
           mkdir _site
-          cp index.html style.css app.mjs api.mjs recipe.mjs qr.mjs yaml.mjs _site/
+          cp index.html style.css app.mjs recipe.mjs _site/
       - uses: actions/upload-pages-artifact@v5
         with:
           path: ./_site

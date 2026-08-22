@@ -9,8 +9,8 @@
        talks to nobody. `default-src 'none'` makes that a browser-enforced fact
        rather than a promise: no CDN, no font host, no QR service, no analytics.
        `data:` is only there for the empty favicon that suppresses /favicon.ico.
-       `connect-src 'self'` allows talking only to the local plate API server. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+       The page has no API, analytics, fonts, or other network dependency. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; base-uri 'none'; form-action 'none'">
 
   <title>Recipe</title>
   <link rel="icon" href="data:,">
@@ -21,16 +21,6 @@
 <body>
   <main>
     <section id="editor-nav" class="editor-nav" hidden>
-      <div class="editor-row server-only" hidden>
-        <label for="recipe-select">Recipe</label>
-        <select id="recipe-select">
-          <option value="">(Choose stored recipe)</option>
-        </select>
-        <button id="save-recipe-btn" type="button">
-          Save
-        </button>
-        <span id="save-status" class="save-status"></span>
-      </div>
       <div class="editor-meta">
         <div class="meta-field">
           <label for="recipe-name-input">Name</label>
@@ -73,6 +63,7 @@
               <th scope="col" class="abbr" title="Protein, grams">P</th>
               <th scope="col" class="abbr" title="Carbohydrate, grams">C</th>
               <th scope="col" class="abbr" title="Fat, grams">F</th>
+              <th scope="col" class="action-col"></th>
             </tr>
           </thead>
           <tbody id="ingredient-rows"></tbody>
@@ -83,24 +74,15 @@
       <details id="editor-tools" class="editor-tools" hidden>
         <summary>Add ingredients</summary>
         <div class="editor-panels">
-          <div class="product-search-panel server-only" hidden>
-            <h2>Search Products</h2>
-            <div class="search-row">
-              <input id="product-search-input" type="search" placeholder="Search database...">
-              <button id="product-search-btn" type="button">Search</button>
-              <label class="remote-label"><input id="product-search-remote" type="checkbox"> Remote</label>
-            </div>
-            <ul id="product-search-results" class="search-results"></ul>
-          </div>
           <div class="manual-ingredient-panel">
             <h2>Add Manual Ingredient</h2>
             <div class="manual-grid">
               <input id="manual-name" type="text" placeholder="Name">
               <input id="manual-grams" type="number" min="0" step="any" placeholder="Grams">
-              <input id="manual-kcal" type="number" min="0" step="any" placeholder="kcal/100g">
-              <input id="manual-protein" type="number" min="0" step="any" placeholder="P/100g">
-              <input id="manual-carbs" type="number" min="0" step="any" placeholder="C/100g">
-              <input id="manual-fat" type="number" min="0" step="any" placeholder="F/100g">
+              <input id="manual-kcal" type="number" min="0" step="any" placeholder="Total kcal">
+              <input id="manual-protein" type="number" min="0" step="any" placeholder="Total P">
+              <input id="manual-carbs" type="number" min="0" step="any" placeholder="Total C">
+              <input id="manual-fat" type="number" min="0" step="any" placeholder="Total F">
               <button id="manual-add-btn" type="button">Add</button>
             </div>
           </div>
@@ -128,19 +110,6 @@
         </div>
       </section>
 
-      <!-- Only offered for a recipe this page was willing to total: a YAML file
-           with a silently missing macro gets saved, reused and trusted, which is
-           worse than the refusal shown on screen. -->
-      <section id="export" hidden>
-        <button id="download" type="button">Download as YAML</button>
-        <p id="download-hint" class="hint">Saves one file for your own
-          <code>~/.config/recipes/</code> directory.</p>
-      </section>
-
-      <section id="qr" hidden>
-        <div id="qr-code"></div>
-        <p class="hint">Scan to open this recipe on another device.</p>
-      </section>
     </section>
   </main>
 </body>

@@ -2,7 +2,7 @@
   "name": "plate",
   "private": true,
   "type": "module",
-  "description": "Test harness only. The page itself has no dependencies and no build step: index.html loads the .mjs files directly, and GitHub Pages serves this directory as it stands.",
+  "description": "Static recipe editor and share-link viewer.",
   "scripts": {
     "test": "node --test \"tests/*_test.mjs\""
   },
