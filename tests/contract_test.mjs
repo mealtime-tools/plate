@@ -41,8 +41,7 @@ test("re-sharing writes the stated nutrients and omits the rest", async () => {
   const recipe = readRecipe(await decodePayload(GOLDEN));
   const [item] = recipeToPayload(recipe).ingredients;
 
-  // An unstated nutrient is omitted, not written as null: the two mean the same
-  // thing on read, and a null per name would grow every link by the vocabulary.
+  // An unstated nutrient is omitted, not written as null: a null per name would grow every link.
   assert.deepEqual(Object.keys(item), [
     "name",
     "grams",
@@ -160,8 +159,7 @@ test("a nutrient beyond the macros round-trips and totals all or nothing", async
   assert.deepEqual(payload.ingredients[0], tofu);
   assert.deepEqual(payload.ingredients[1], oil);
 
-  // Oil states no calcium, so a calcium total would under-report: omit the key.
-  // The same rule the macros and fibre follow, over the whole vocabulary.
+  // Oil states no calcium, so omit the key: the macros' rule, over the whole vocabulary.
   const totals = recipeTotals(
     readRecipe(await decodePayload(await encodePayload(payload))),
   );
@@ -176,8 +174,7 @@ test("the deploy copies every module the page imports", async () => {
   const workflow = await read(".github/workflows/pages.yml");
   const sources = await Promise.all([read("app.mjs"), read("recipe.mjs")]);
 
-  // A module missing from the artifact is a 404 on Pages and a blank page, and
-  // the browser test cannot see it: it serves the whole checkout.
+  // A module missing from the artifact is a blank page on Pages; the browser test serves the whole checkout and cannot see it.
   for (const source of sources) {
     for (const [, file] of source.matchAll(/from "\.\/([\w.-]+)"/g)) {
       assert.equal(workflow.includes(file), true, `${file} is not deployed`);

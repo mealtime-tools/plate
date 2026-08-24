@@ -1,7 +1,4 @@
-// Guards on the vendored nutrient vocabulary. It is a copy of a file this repo
-// does not own, so what is checked here is that the copy is intact, that it
-// still carries every name plate depends on, and that it has not drifted from
-// the upstream checkout when one is next to us.
+// Guards on the vendored vocabulary: a copy of a file this repo does not own, so check it is intact and has not drifted.
 
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
@@ -10,8 +7,7 @@ import { test } from "node:test";
 import { VOCABULARY } from "../nutrients.mjs";
 import { CORE_NUTRIENTS, NUTRIENT_KEYS } from "../recipe.mjs";
 
-// The names a share link written before the vocabulary widened can carry, so
-// dropping one would strand links that already exist.
+// The names links in the wild already carry: dropping one strands them, so they are pinned rather than derived.
 const WIRE_NAMES = [
   "kcal",
   "protein",
@@ -46,9 +42,7 @@ test("the vocabulary keeps every name plate depends on", () => {
   for (const name of WIRE_NAMES) {
     assert.equal(NUTRIENT_KEYS.includes(name), true, `${name} is missing`);
   }
-  // Pinned, not derived: app.mjs renders exactly these four columns from its
-  // own MACROS, so a fifth core nutrient upstream is a layout decision and has
-  // to fail here rather than quietly leave a column out of the table.
+  // Pinned: a fifth core nutrient upstream is a layout decision, so it must fail here, not drop a column.
   assert.deepEqual(CORE_NUTRIENTS, ["kcal", "protein", "fat", "carbs"]);
 
   // The vocabulary's own wire order, taken as given: nothing invented, reordered or lost.
