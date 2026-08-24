@@ -36,6 +36,37 @@ test("the current Recipes share vector decodes", async () => {
   });
 });
 
+test("re-sharing writes the stated nutrients and omits the rest", async () => {
+  const recipe = readRecipe(await decodePayload(GOLDEN));
+  const [item] = recipeToPayload(recipe).ingredients;
+
+  // An unstated nutrient is omitted, not written as null: the two mean the same
+  // thing on read, and a null per name would grow every link by the vocabulary.
+  assert.deepEqual(Object.keys(item), [
+    "name",
+    "grams",
+    "kcal",
+    "protein",
+    "fat",
+    "carbs",
+  ]);
+
+  // An explicit zero is a reading, so it survives the round trip.
+  const zeroed = recipeToPayload(
+    readRecipe({ ingredients: [{ name: "Water", grams: 100, kcal: 0, protein: 0, fat: 0, carbs: 0, sodium: 0 }] }),
+  );
+  assert.equal(zeroed.ingredients[0].sodium, 0);
+});
+
+test("a re-shared link decodes to the recipe it came from", async () => {
+  const recipe = readRecipe(await decodePayload(GOLDEN));
+  const again = readRecipe(
+    await decodePayload(await encodePayload(recipeToPayload(recipe))),
+  );
+
+  assert.deepEqual(again, recipe);
+});
+
 test("missing nutrients are null while explicit zero totals as zero", () => {
   const item = (carbs) => ({
     ingredients: [{

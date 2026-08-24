@@ -15,7 +15,9 @@ URL so it can be copied directly.
 
 Missing values remain `null` and suppress totals. Explicit zero values remain
 zero. Each ingredient carries optional `grams` and nutrients for that whole
-amount; absent `grams` means 100 g and totals are simple sums.
+amount; absent `grams` means 100 g and totals are simple sums. An absent
+nutrient and a `null` one read alike, so re-sharing writes only the nutrients an
+ingredient states.
 
 Run the small contract suite with `npm test`. GitHub Pages deploys the four
 runtime files directly: `index.html`, `style.css`, `app.mjs`, and `recipe.mjs`.

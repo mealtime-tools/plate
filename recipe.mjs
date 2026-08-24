@@ -6,6 +6,8 @@
 //   #r=<base64url(raw_deflate(compact_json))>, `=` padding stripped
 //   {"name":...,"servings":...,"ingredients":[{"name":...,"grams":...,"kcal":...,...}]}
 // Nutrients describe each whole ingredient. Totals are therefore simple sums.
+// A nutrient an ingredient does not state is absent or null, never zero; the
+// two are read alike, and re-sharing writes only the stated ones.
 
 export const FRAGMENT_KEY = "r";
 
@@ -181,7 +183,13 @@ export function readRecipe(payload) {
   };
 }
 
-/** An editor recipe -> the compact, versioned object carried by a share URL. */
+/**
+ * An editor recipe -> the compact, versioned object carried by a share URL.
+ *
+ * Only the nutrients an ingredient states are written. An absent key and a null
+ * one already mean the same thing to readIngredient, so omitting is lossless,
+ * and a null per unstated name would grow every link by the whole vocabulary.
+ */
 export function recipeToPayload(recipe) {
   return {
     name: recipe.name,
@@ -192,7 +200,9 @@ export function recipeToPayload(recipe) {
       name: ingredient.name,
       grams: ingredient.grams,
       ...Object.fromEntries(
-        NUTRIENT_KEYS.map((key) => [key, ingredient[key] ?? null]),
+        NUTRIENT_KEYS.map((key) => [key, finiteOrNull(ingredient[key])]).filter(
+          ([, value]) => value !== null,
+        ),
       ),
     })),
   };
