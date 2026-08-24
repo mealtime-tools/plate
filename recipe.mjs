@@ -9,6 +9,8 @@
 // A nutrient an ingredient does not state is absent or null, never zero; the
 // two are read alike, and re-sharing writes only the stated ones.
 
+import { VOCABULARY } from "./nutrients.mjs";
+
 export const FRAGMENT_KEY = "r";
 
 /** A payload we refuse to render, with a message meant for a human. */
@@ -115,8 +117,19 @@ export async function encodePayload(payload) {
   return bytesToBase64url(new Uint8Array(await compressed));
 }
 
-const MACRO_KEYS = ["kcal", "protein", "fat", "carbs"];
-export const NUTRIENT_KEYS = [...MACRO_KEYS, "fiber", "sodium", "sugar"];
+// The vocabulary is not plate's to define: it is shared with the Python tools,
+// so both lists come from the vendored copy rather than being restated here.
+// CORE_NUTRIENTS is what arithmetic requires; the wider list is what the wire
+// format may carry. Neither is a display concern -- the page still shows four
+// macro columns (app.mjs, MACROS).
+export const CORE_NUTRIENTS = VOCABULARY.coreNutrients;
+
+// The vocabulary is alphabetical; the four macros lead here so a share payload
+// reads the way Recipes writes one. Same names, derived rather than retyped.
+export const NUTRIENT_KEYS = [
+  ...CORE_NUTRIENTS,
+  ...VOCABULARY.nutrients.filter((key) => !CORE_NUTRIENTS.includes(key)),
+];
 
 /** A finite number, or null. Strings and nulls are not coerced: see readRecipe. */
 function finiteOrNull(value) {
@@ -141,7 +154,7 @@ function readIngredient(entry, index) {
 
   NUTRIENT_KEYS.forEach((key) => {
     const value = finiteOrNull(row[key]);
-    if (value === null && MACRO_KEYS.includes(key)) missing.push(key);
+    if (value === null && CORE_NUTRIENTS.includes(key)) missing.push(key);
     nutrients[key] = value;
   });
 

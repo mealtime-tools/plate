@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { after, before, test } from "node:test";
 
@@ -132,6 +133,56 @@ test("optional nutrients total only when every ingredient states them", () => {
   assert.equal(mixed.sodium, 94);
   assert.equal(mixed.sugar, 12.9);
   assert.equal(mixed.kcal, 473);
+});
+
+test("a nutrient beyond the macros round-trips and totals all or nothing", async () => {
+  const tofu = {
+    name: "Tofu",
+    grams: 200,
+    kcal: 288,
+    protein: 34,
+    fat: 18,
+    carbs: 6,
+    calcium: 0.7,
+    saturated_fat: 2.6,
+  };
+  const oil = {
+    name: "Oil",
+    grams: 10,
+    kcal: 88,
+    protein: 0,
+    fat: 10,
+    carbs: 0,
+    saturated_fat: 1.4,
+  };
+
+  const payload = recipeToPayload(readRecipe({ ingredients: [tofu, oil] }));
+  assert.deepEqual(payload.ingredients[0], tofu);
+  assert.deepEqual(payload.ingredients[1], oil);
+
+  // Oil states no calcium, so a calcium total would under-report: omit the key.
+  // The same rule the macros and fibre follow, over the whole vocabulary.
+  const totals = recipeTotals(
+    readRecipe(await decodePayload(await encodePayload(payload))),
+  );
+  assert.equal("calcium" in totals, false);
+  assert.equal(totals.saturated_fat, 4);
+  assert.equal(totals.kcal, 376);
+});
+
+test("the deploy copies every module the page imports", async () => {
+  const read = (name) =>
+    readFile(new URL(`../${name}`, import.meta.url), "utf8");
+  const workflow = await read(".github/workflows/pages.yml");
+  const sources = await Promise.all([read("app.mjs"), read("recipe.mjs")]);
+
+  // A module missing from the artifact is a 404 on Pages and a blank page, and
+  // the browser test cannot see it: it serves the whole checkout.
+  for (const source of sources) {
+    for (const [, file] of source.matchAll(/from "\.\/([\w.-]+)"/g)) {
+      assert.equal(workflow.includes(file), true, `${file} is not deployed`);
+    }
+  }
 });
 
 let site;
