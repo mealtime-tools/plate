@@ -1,17 +1,8 @@
-// The nutrient vocabulary, vendored from the `mealtime-nutrients` package,
-// version 0.1.0, which is the single source of truth for the five mealtime
-// tools. The body below is that package's `nutrients.json` pasted verbatim, so
-// `diff` against it is meaningful; JSON is a subset of a JS object literal, so
-// the quoted keys are the file's own and not a transcription.
-//
-// It is a module rather than the JSON file itself because a JSON module import
-// is fetched under `connect-src`, which index.html's `default-src 'none'`
-// blocks. A module is `script-src 'self'`, which the page already allows. Plate
-// has no bundler to inline it and cannot fetch it at runtime, so a committed
-// copy is the only delivery left.
-//
-// To update: regenerate upstream with `python -m mealtime_nutrients.generate_json`,
-// paste the file's contents below, and run `npm test`.
+// The nutrient vocabulary: `mealtime-nutrients` 0.3.0's `nutrients.json` pasted verbatim, so `diff` against it is meaningful.
+
+// A module rather than that JSON file: a JSON import is fetched under `connect-src`, which index.html's `default-src 'none'` blocks.
+
+// To update: regenerate upstream with `python -m mealtime_nutrients.generate_json`, paste its contents below, and run `npm test`.
 
 export const VOCABULARY =
 {
@@ -20,21 +11,24 @@ export const VOCABULARY =
   "energyNutrient": "kcal",
   "coreNutrients": ["kcal", "protein", "fat", "carbs"],
   "nutrients": [
+    "kcal",
+    "protein",
+    "fat",
+    "carbs",
+    "fiber",
+    "sodium",
+    "sugar",
     "biotin",
     "caffeine",
     "calcium",
-    "carbs",
     "chloride",
     "cholesterol",
     "chromium",
     "copper",
-    "fat",
-    "fiber",
     "folate",
     "folic_acid",
     "iodine",
     "iron",
-    "kcal",
     "magnesium",
     "manganese",
     "molybdenum",
@@ -44,12 +38,9 @@ export const VOCABULARY =
     "phosphorus",
     "polyunsaturated_fat",
     "potassium",
-    "protein",
     "riboflavin",
     "saturated_fat",
     "selenium",
-    "sodium",
-    "sugar",
     "thiamin",
     "trans_fat",
     "unsaturated_fat",
