@@ -114,7 +114,7 @@ export async function encodePayload(payload) {
 }
 
 const MACRO_KEYS = ["kcal", "protein", "fat", "carbs"];
-const NUTRIENT_KEYS = [...MACRO_KEYS, "fiber", "sodium", "sugar"];
+export const NUTRIENT_KEYS = [...MACRO_KEYS, "fiber", "sodium", "sugar"];
 
 /** A finite number, or null. Strings and nulls are not coerced: see readRecipe. */
 function finiteOrNull(value) {
@@ -208,7 +208,11 @@ function readServings(value) {
 /** Nutrients for an ingredient's actual weight. */
 export function scaleIngredient(ingredient) {
   if (ingredient.missing.length) return null;
-  return Object.fromEntries(MACRO_KEYS.map((key) => [key, ingredient[key]]));
+
+  // finiteOrNull: readIngredient nulls it, the editor omits the key entirely.
+  return Object.fromEntries(
+    NUTRIENT_KEYS.map((key) => [key, finiteOrNull(ingredient[key])]),
+  );
 }
 
 /**
@@ -220,12 +224,17 @@ export function scaleIngredient(ingredient) {
 export function recipeTotals(recipe) {
   if (recipe.problems.length) return null;
 
-  const totals = { grams: 0, kcal: 0, protein: 0, fat: 0, carbs: 0 };
-  for (const ingredient of recipe.ingredients) {
-    const scaled = scaleIngredient(ingredient);
+  // All or nothing per nutrient: a partial sum would under-report.
+  const scaled = recipe.ingredients.map(scaleIngredient);
+  const keys = NUTRIENT_KEYS.filter(
+    (key) => !scaled.some((values) => values[key] === null),
+  );
+
+  const totals = { grams: 0, ...Object.fromEntries(keys.map((k) => [k, 0])) };
+  recipe.ingredients.forEach((ingredient, index) => {
     totals.grams += ingredient.grams;
-    for (const key of MACRO_KEYS) totals[key] += scaled[key];
-  }
+    for (const key of keys) totals[key] += scaled[index][key];
+  });
   return totals;
 }
 

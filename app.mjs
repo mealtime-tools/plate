@@ -1,6 +1,7 @@
 import {
   decodePayload,
   encodePayload,
+  NUTRIENT_KEYS,
   per100g,
   perServing,
   readFragment,
@@ -115,8 +116,11 @@ function renderRows() {
       const value = Number(grams.value);
       const previous = ingredient.grams;
       if (previous > 0 && value > 0) {
-        for (const [, key] of MACROS) {
-          ingredient[key] *= value / previous;
+        // Not just the rendered macros: an unscaled one ships a stale number.
+        for (const key of NUTRIENT_KEYS) {
+          if (Number.isFinite(ingredient[key])) {
+            ingredient[key] *= value / previous;
+          }
         }
       }
       ingredient.grams = grams.value && Number.isFinite(value) ? value : null;

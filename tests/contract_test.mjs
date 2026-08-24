@@ -4,9 +4,12 @@ import { after, before, test } from "node:test";
 
 import {
   decodePayload,
+  encodePayload,
   readRecipe,
   recipeFromHash,
   recipeTotals,
+  recipeToPayload,
+  scaleIngredient,
 } from "../recipe.mjs";
 import { serve } from "./serve.mjs";
 
@@ -62,6 +65,44 @@ test("missing nutrients are null while explicit zero totals as zero", () => {
   })).kcal, 200);
 });
 
+test("optional nutrients total only when every ingredient states them", () => {
+  const oats = {
+    name: "Oats",
+    grams: 100,
+    kcal: 389,
+    protein: 13.2,
+    fat: 6.5,
+    carbs: 67.7,
+    fiber: 10.6,
+    sodium: 6,
+    sugar: 0.9,
+  };
+  const milk = {
+    name: "Milk",
+    grams: 200,
+    kcal: 84,
+    protein: 6.8,
+    fat: 0.4,
+    carbs: 12,
+    sodium: 88,
+    sugar: 12,
+  };
+
+  const stated = recipeTotals(readRecipe({ ingredients: [oats] }));
+  assert.equal(stated.fiber, 10.6);
+  assert.equal(stated.sodium, 6);
+  assert.equal(stated.sugar, 0.9);
+  assert.equal(scaleIngredient(readRecipe({ ingredients: [oats] })
+    .ingredients[0]).fiber, 10.6);
+
+  // Milk states no fibre, so a fibre total would under-report: omit the key.
+  const mixed = recipeTotals(readRecipe({ ingredients: [oats, milk] }));
+  assert.equal("fiber" in mixed, false);
+  assert.equal(mixed.sodium, 94);
+  assert.equal(mixed.sugar, 12.9);
+  assert.equal(mixed.kcal, 473);
+});
+
 let site;
 let browser;
 
@@ -99,5 +140,41 @@ test("the static page renders and edits its share URL", async () => {
   assert.equal(edited.name, "Edited Toast");
   assert.deepEqual(errors, []);
   assert.deepEqual(offsite, []);
+  await page.close();
+});
+
+test("a grams edit rescales every nutrient in the share URL", async () => {
+  const encoded = await encodePayload(recipeToPayload({
+    name: "Oats",
+    servings: 1,
+    notes: "",
+    tags: [],
+    ingredients: [{
+      name: "Oats",
+      grams: 100,
+      kcal: 389,
+      protein: 13.2,
+      fat: 6.5,
+      carbs: 67.7,
+      fiber: 10.6,
+      sodium: null,
+      sugar: 0.9,
+    }],
+  }));
+
+  const page = await browser.newPage();
+  await page.goto(`${site.origin}/#r=${encoded}`);
+  await page.waitForSelector("#recipe:not([hidden])");
+
+  const before = new URL(page.url()).hash;
+  await page.locator(".grams-input").fill("200");
+  await page.waitForFunction((hash) => location.hash !== hash, before);
+
+  const [item] = (await recipeFromHash(new URL(page.url()).hash)).ingredients;
+  assert.equal(item.grams, 200);
+  assert.equal(item.kcal, 778);
+  assert.equal(item.fiber, 21.2);
+  assert.equal(item.sugar, 1.8);
+  assert.equal(item.sodium, null);
   await page.close();
 });
