@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { VOCABULARY } from "../nutrients.mjs";
+import VOCABULARY from "../nutrients.json" with { type: "json" };
 import { CORE_NUTRIENTS, NUTRIENT_KEYS } from "../recipe.mjs";
 
 // The names links in the wild already carry: dropping one strands them, so they are pinned rather than derived.
@@ -60,6 +60,6 @@ test("the vendored copy matches the upstream checkout", (t) => {
     return;
   }
 
-  const message = "stale: paste nutrients/nutrients.json into nutrients.mjs";
+  const message = "stale: copy nutrients/nutrients.json over this repo's";
   assert.deepEqual(VOCABULARY, JSON.parse(readFileSync(UPSTREAM, "utf8")), message);
 });

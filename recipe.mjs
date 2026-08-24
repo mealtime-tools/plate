@@ -6,7 +6,7 @@
 //   Nutrient keys follow the vocabulary's wire order and describe the whole ingredient, so totals are sums.
 //   An unstated nutrient is absent or null, never zero; the two read alike, and re-sharing writes only the stated ones.
 
-import { VOCABULARY } from "./nutrients.mjs";
+import VOCABULARY from "./nutrients.json" with { type: "json" };
 
 export const FRAGMENT_KEY = "r";
 

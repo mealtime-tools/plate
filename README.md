@@ -21,13 +21,15 @@ ingredient states.
 
 Nutrient names come from the [`mealtime-nutrients`][nutrients] package, which
 the Python tools import and which commits a `nutrients.json` for this one.
-`nutrients.mjs` is that file vendored: a static page cannot import JSON under
-`default-src 'none'`, and there is no bundler to inline it. Update it by pasting
-a regenerated `nutrients.json` in, then running the suite. The page still shows
-four macro columns; the wider vocabulary is arithmetic and wire format only.
+That file is vendored here byte for byte and imported as a JSON module, which
+is why the CSP names `connect-src 'self'`: a JSON import is fetched, and
+`default-src 'none'` blocks it. The request is same-origin, so the page still
+makes none off-origin. Update it by copying a regenerated `nutrients.json`
+over this one and running the suite. The page still shows four macro columns;
+the wider vocabulary is arithmetic and wire format only.
 
 Run the small contract suite with `npm test`. GitHub Pages deploys the five
 runtime files directly: `index.html`, `style.css`, `app.mjs`, `recipe.mjs`, and
-`nutrients.mjs`.
+`nutrients.json`.
 
 [nutrients]: https://pypi.org/project/mealtime-nutrients/

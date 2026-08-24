@@ -10,7 +10,7 @@
        rather than a promise: no CDN, no font host, no QR service, no analytics.
        `data:` is only there for the empty favicon that suppresses /favicon.ico.
        The page has no API, analytics, fonts, or other network dependency. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'self'; script-src 'self'; style-src 'self'; img-src data:; base-uri 'none'; form-action 'none'">
 
   <title>Recipe</title>
   <link rel="icon" href="data:,">
