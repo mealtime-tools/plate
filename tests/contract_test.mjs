@@ -225,6 +225,25 @@ test("the static page renders and edits its share URL", async () => {
   await page.close();
 });
 
+test("the editor reports missing nutrients in the vocabulary's own order", async () => {
+  const encoded = await encodePayload({
+    name: "Half a loaf",
+    servings: 1,
+    ingredients: [{ name: "Sourdough", grams: 60, kcal: 258, protein: 9.1 }],
+  });
+
+  const page = await browser.newPage();
+  await page.goto(`${site.origin}/#r=${encoded}`);
+  await page.waitForSelector("#alert:not([hidden])");
+
+  // Core order, not column order: completeness is the vocabulary's rule, not the table's.
+  assert.equal(
+    await page.locator("#alert-list li").first().textContent(),
+    "Sourdough is missing fat, carbs.",
+  );
+  await page.close();
+});
+
 test("a grams edit rescales every nutrient in the share URL", async () => {
   const encoded = await encodePayload(recipeToPayload({
     name: "Oats",

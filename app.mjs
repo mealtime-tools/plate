@@ -1,4 +1,5 @@
 import {
+  CORE_NUTRIENTS,
   decodePayload,
   encodePayload,
   NUTRIENT_KEYS,
@@ -50,7 +51,8 @@ function updateMissing(ingredient) {
   if (!Number.isFinite(ingredient.grams) || ingredient.grams <= 0) {
     missing.push("grams");
   }
-  for (const [, key] of MACROS) {
+  // The vocabulary's core set decides completeness; MACROS only decides columns.
+  for (const key of CORE_NUTRIENTS) {
     if (!Number.isFinite(ingredient[key])) missing.push(key);
   }
   ingredient.missing = missing;
