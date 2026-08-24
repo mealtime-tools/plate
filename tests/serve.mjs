@@ -1,7 +1,4 @@
-// Static file server for tests and for eyeballing the page locally.
-//
-// It exists because `python3 -m http.server` serves .mjs as octet-stream on some
-// systems, and a module served with the wrong type never loads.
+// Static file server for tests: `python3 -m http.server` can serve .mjs as octet-stream, and a module with the wrong type never loads.
 
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";

@@ -1,6 +1,8 @@
 import {
+  CORE_NUTRIENTS,
   decodePayload,
   encodePayload,
+  NUTRIENT_KEYS,
   per100g,
   perServing,
   readFragment,
@@ -49,7 +51,8 @@ function updateMissing(ingredient) {
   if (!Number.isFinite(ingredient.grams) || ingredient.grams <= 0) {
     missing.push("grams");
   }
-  for (const [, key] of MACROS) {
+  // The vocabulary's core set decides completeness; MACROS only decides columns.
+  for (const key of CORE_NUTRIENTS) {
     if (!Number.isFinite(ingredient[key])) missing.push(key);
   }
   ingredient.missing = missing;
@@ -115,8 +118,11 @@ function renderRows() {
       const value = Number(grams.value);
       const previous = ingredient.grams;
       if (previous > 0 && value > 0) {
-        for (const [, key] of MACROS) {
-          ingredient[key] *= value / previous;
+        // Not just the rendered macros: an unscaled one ships a stale number.
+        for (const key of NUTRIENT_KEYS) {
+          if (Number.isFinite(ingredient[key])) {
+            ingredient[key] *= value / previous;
+          }
         }
       }
       ingredient.grams = grams.value && Number.isFinite(value) ? value : null;

@@ -1,24 +1,19 @@
-// Share-link codec and recipe arithmetic. No DOM, no network, no globals beyond
-// the platform's own `DecompressionStream`, so this file runs under `node --test`
-// exactly as it runs in the browser.
+// Share-link codec and recipe arithmetic. No DOM and no network, so `node --test` runs this as the browser does.
 //
-// Wire format (README.md, "Share URL wire format"):
+// Wire format:
 //   #r=<base64url(raw_deflate(compact_json))>, `=` padding stripped
-//   {"name":...,"servings":...,"ingredients":[{"name":...,"grams":...,"kcal":...,...}]}
-// Nutrients describe each whole ingredient. Totals are therefore simple sums.
+//   {"name":..,"servings":..,"notes":..,"tags":[..],"ingredients":[{"name":..,"grams":..,<nutrients>}]}
+//   Nutrient keys follow the vocabulary's wire order and describe the whole ingredient, so totals are sums.
+//   An unstated nutrient is absent or null, never zero; the two read alike, and re-sharing writes only the stated ones.
+
+import VOCABULARY from "./nutrients.json" with { type: "json" };
 
 export const FRAGMENT_KEY = "r";
 
 /** A payload we refuse to render, with a message meant for a human. */
 export class ShareError extends Error {}
 
-/**
- * Pull the payload out of a location hash.
- *
- * The hash is parsed as `key=value` pairs so a future second key cannot break
- * existing links, and returns null (not an error) when absent: no fragment is
- * the empty state, not a failure.
- */
+/** The payload in a location hash, read as `key=value` pairs so a second key cannot break old links. Null when absent. */
 export function readFragment(hash) {
   const body = String(hash ?? "").replace(/^#/, "");
   if (!body) return null;
@@ -27,18 +22,12 @@ export function readFragment(hash) {
   return found ? found : null;
 }
 
-/**
- * base64url -> bytes.
- *
- * `atob` only speaks standard base64 and rejects a wrong-length string, so the
- * two substitutions and the stripped padding both have to be undone here.
- */
+/** base64url -> bytes. `atob` speaks only standard base64 and rejects a wrong length, so both undone here. */
 export function base64urlToBytes(text) {
   const standard = String(text).replace(/-/g, "+").replace(/_/g, "/");
   const padded = standard + "=".repeat((4 - (standard.length % 4)) % 4);
 
-  // Reject before atob so the failure carries our message rather than a
-  // browser-specific InvalidCharacterError.
+  // Reject before atob, so the failure carries our message and not a browser's InvalidCharacterError.
   if (!/^[A-Za-z0-9+/]*={0,2}$/.test(padded)) {
     throw new ShareError(
       "The link contains characters that are not valid base64url.",
@@ -55,8 +44,7 @@ export function base64urlToBytes(text) {
 export async function inflateRaw(bytes) {
   const stream = new DecompressionStream("deflate-raw");
 
-  // Write and close before reading: the payload is a few hundred bytes, so
-  // there is no back-pressure to manage and no reason to interleave.
+  // Write and close before reading: a few hundred bytes have no back-pressure to manage.
   const writer = stream.writable.getWriter();
   writer.write(bytes).catch(() => {});
   writer.close().catch(() => {});
@@ -113,19 +101,18 @@ export async function encodePayload(payload) {
   return bytesToBase64url(new Uint8Array(await compressed));
 }
 
-const MACRO_KEYS = ["kcal", "protein", "fat", "carbs"];
-const NUTRIENT_KEYS = [...MACRO_KEYS, "fiber", "sodium", "sugar"];
+// Shared with the Python tools, so both lists come from the vendored copy; neither is a display concern.
+export const CORE_NUTRIENTS = VOCABULARY.coreNutrients;
+
+// Canonical wire order since 0.3.0 -- the macros already lead, so nothing to rearrange here.
+export const NUTRIENT_KEYS = VOCABULARY.nutrients;
 
 /** A finite number, or null. Strings and nulls are not coerced: see readRecipe. */
 function finiteOrNull(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-/**
- * Validate one `i` entry into an ingredient plus the list of fields it is
- * missing. A missing macro is recorded, never defaulted to zero -- an inferred
- * zero is what silently under-counted a 450 g recipe in the old page.
- */
+/** One entry -> an ingredient plus what it is missing. A missing macro is recorded, never inferred as zero. */
 function readIngredient(entry, index) {
   const row = entry && typeof entry === "object" && !Array.isArray(entry) ? entry : {};
   const label =
@@ -139,7 +126,7 @@ function readIngredient(entry, index) {
 
   NUTRIENT_KEYS.forEach((key) => {
     const value = finiteOrNull(row[key]);
-    if (value === null && MACRO_KEYS.includes(key)) missing.push(key);
+    if (value === null && CORE_NUTRIENTS.includes(key)) missing.push(key);
     nutrients[key] = value;
   });
 
@@ -147,14 +134,7 @@ function readIngredient(entry, index) {
   return { name: label, grams, ...nutrients, missing };
 }
 
-/**
- * Payload -> a recipe the renderer can walk, plus `problems`.
- *
- * `problems` is the refusal channel: any entry in it means the recipe is
- * incomplete and `recipeTotals` will return null. Structuring it this way makes
- * the rule mechanical -- a renderer cannot get a total for a broken recipe even
- * by accident.
- */
+/** Payload -> a recipe the renderer can walk. Any entry in `problems` means `recipeTotals` returns null. */
 export function readRecipe(payload) {
   if (payload.ingredients !== undefined && !Array.isArray(payload.ingredients)) {
     throw new ShareError("The link's ingredient list is malformed.");
@@ -181,7 +161,7 @@ export function readRecipe(payload) {
   };
 }
 
-/** An editor recipe -> the compact, versioned object carried by a share URL. */
+/** A recipe -> the object a share URL carries. Only stated nutrients are written: absent and null read alike. */
 export function recipeToPayload(recipe) {
   return {
     name: recipe.name,
@@ -192,7 +172,9 @@ export function recipeToPayload(recipe) {
       name: ingredient.name,
       grams: ingredient.grams,
       ...Object.fromEntries(
-        NUTRIENT_KEYS.map((key) => [key, ingredient[key] ?? null]),
+        NUTRIENT_KEYS.map((key) => [key, finiteOrNull(ingredient[key])]).filter(
+          ([, value]) => value !== null,
+        ),
       ),
     })),
   };
@@ -208,24 +190,28 @@ function readServings(value) {
 /** Nutrients for an ingredient's actual weight. */
 export function scaleIngredient(ingredient) {
   if (ingredient.missing.length) return null;
-  return Object.fromEntries(MACRO_KEYS.map((key) => [key, ingredient[key]]));
+
+  // finiteOrNull: readIngredient nulls it, the editor omits the key entirely.
+  return Object.fromEntries(
+    NUTRIENT_KEYS.map((key) => [key, finiteOrNull(ingredient[key])]),
+  );
 }
 
-/**
- * Whole-recipe totals, or null when the recipe is incomplete.
- *
- * The Recipes completeness contract: an unresolved ingredient refuses to total.
- * null rather than a partial sum is what enforces it.
- */
+/** Whole-recipe totals, or null: the Recipes contract is that an unresolved ingredient refuses to total. */
 export function recipeTotals(recipe) {
   if (recipe.problems.length) return null;
 
-  const totals = { grams: 0, kcal: 0, protein: 0, fat: 0, carbs: 0 };
-  for (const ingredient of recipe.ingredients) {
-    const scaled = scaleIngredient(ingredient);
+  // All or nothing per nutrient: a partial sum would under-report.
+  const scaled = recipe.ingredients.map(scaleIngredient);
+  const keys = NUTRIENT_KEYS.filter(
+    (key) => !scaled.some((values) => values[key] === null),
+  );
+
+  const totals = { grams: 0, ...Object.fromEntries(keys.map((k) => [k, 0])) };
+  recipe.ingredients.forEach((ingredient, index) => {
     totals.grams += ingredient.grams;
-    for (const key of MACRO_KEYS) totals[key] += scaled[key];
-  }
+    for (const key of keys) totals[key] += scaled[index][key];
+  });
   return totals;
 }
 

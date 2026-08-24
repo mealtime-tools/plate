@@ -15,7 +15,21 @@ URL so it can be copied directly.
 
 Missing values remain `null` and suppress totals. Explicit zero values remain
 zero. Each ingredient carries optional `grams` and nutrients for that whole
-amount; absent `grams` means 100 g and totals are simple sums.
+amount; absent `grams` means 100 g and totals are simple sums. An absent
+nutrient and a `null` one read alike, so re-sharing writes only the nutrients an
+ingredient states.
 
-Run the small contract suite with `npm test`. GitHub Pages deploys the four
-runtime files directly: `index.html`, `style.css`, `app.mjs`, and `recipe.mjs`.
+Nutrient names come from the [`mealtime-nutrients`][nutrients] package, which
+the Python tools import and which commits a `nutrients.json` for this one.
+That file is vendored here byte for byte and imported as a JSON module, which
+is why the CSP names `connect-src 'self'`: a JSON import is fetched, and
+`default-src 'none'` blocks it. The request is same-origin, so the page still
+makes none off-origin. Update it by copying a regenerated `nutrients.json`
+over this one and running the suite. The page still shows four macro columns;
+the wider vocabulary is arithmetic and wire format only.
+
+Run the small contract suite with `npm test`. GitHub Pages deploys the five
+runtime files directly: `index.html`, `style.css`, `app.mjs`, `recipe.mjs`, and
+`nutrients.json`.
+
+[nutrients]: https://pypi.org/project/mealtime-nutrients/
