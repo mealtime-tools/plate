@@ -124,12 +124,8 @@ export async function encodePayload(payload) {
 // macro columns (app.mjs, MACROS).
 export const CORE_NUTRIENTS = VOCABULARY.coreNutrients;
 
-// The vocabulary is alphabetical; the four macros lead here so a share payload
-// reads the way Recipes writes one. Same names, derived rather than retyped.
-export const NUTRIENT_KEYS = [
-  ...CORE_NUTRIENTS,
-  ...VOCABULARY.nutrients.filter((key) => !CORE_NUTRIENTS.includes(key)),
-];
+// Canonical wire order since 0.3.0 -- the macros already lead, so nothing to rearrange here.
+export const NUTRIENT_KEYS = VOCABULARY.nutrients;
 
 /** A finite number, or null. Strings and nulls are not coerced: see readRecipe. */
 function finiteOrNull(value) {

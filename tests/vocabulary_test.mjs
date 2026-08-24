@@ -51,9 +51,10 @@ test("the vocabulary keeps every name plate depends on", () => {
   // to fail here rather than quietly leave a column out of the table.
   assert.deepEqual(CORE_NUTRIENTS, ["kcal", "protein", "fat", "carbs"]);
 
-  // The same names as the vocabulary, reordered: nothing invented, none lost.
-  // Duplicates would double-count a nutrient in a total.
-  assert.deepEqual([...NUTRIENT_KEYS].sort(), [...VOCABULARY.nutrients].sort());
+  // The vocabulary's own wire order, taken as given: nothing invented, reordered or lost.
+  assert.deepEqual(NUTRIENT_KEYS, VOCABULARY.nutrients);
+
+  // Duplicates would double-count a nutrient in a total; the macros must still lead the wire.
   assert.equal(new Set(NUTRIENT_KEYS).size, NUTRIENT_KEYS.length);
   assert.deepEqual(NUTRIENT_KEYS.slice(0, 4), CORE_NUTRIENTS);
 });
