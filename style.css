@@ -3,12 +3,26 @@
    CDN would be a network request and the CSP forbids one. */
 
 :root {
+  color-scheme: light dark;
   --ink: #1a1a1a;
   --muted: #5c5c5c;
   --line: #d4d4d4;
   --paper: #fdfdfc;
+  --surface: #fff;
   --warn: #8a1c1c;
   --warn-bg: #fdeeee;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e8e8e6;
+    --muted: #a1a19c;
+    --line: #3a3a3f;
+    --paper: #17171a;
+    --surface: #1f1f24;
+    --warn: #ff9b9b;
+    --warn-bg: #3b1c1c;
+  }
 }
 
 * {
@@ -59,7 +73,7 @@ pre {
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--line);
   border-radius: 0.25rem;
-  background: #fff;
+  background: var(--surface);
 }
 
 .hint {
@@ -114,7 +128,7 @@ pre {
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--line);
   border-radius: 0.25rem;
-  background: #fff;
+  background: var(--surface);
   color: inherit;
   /* 16px keeps iOS Safari from zooming the whole page on focus. */
   font: inherit;
@@ -211,7 +225,7 @@ tr.incomplete th.name::after {
   padding: 0.75rem 1rem;
   border: 1px solid var(--line);
   border-radius: 0.35rem;
-  background: #fff;
+  background: var(--surface);
 }
 
 .editor-meta {
@@ -238,6 +252,8 @@ tr.incomplete th.name::after {
   padding: 0.35rem 0.5rem;
   border: 1px solid var(--line);
   border-radius: 0.25rem;
+  background: var(--surface);
+  color: inherit;
   font: inherit;
 }
 
@@ -271,7 +287,7 @@ tr.incomplete th.name::after {
   padding: 0.75rem;
   border: 1px solid var(--line);
   border-radius: 0.35rem;
-  background: #fff;
+  background: var(--surface);
 }
 
 .manual-ingredient-panel h2 {
@@ -290,6 +306,8 @@ tr.incomplete th.name::after {
   padding: 0.35rem 0.4rem;
   border: 1px solid var(--line);
   border-radius: 0.25rem;
+  background: var(--surface);
+  color: inherit;
   font: inherit;
   font-size: 0.85rem;
 }
@@ -298,7 +316,7 @@ tr.incomplete th.name::after {
   padding: 0.35rem 0.5rem;
   border: 1px solid var(--line);
   border-radius: 0.25rem;
-  background: #fff;
+  background: var(--surface);
   font: inherit;
   cursor: pointer;
 }
@@ -308,6 +326,8 @@ tr.incomplete th.name::after {
   padding: 0.2rem 0.3rem;
   border: 1px solid var(--line);
   border-radius: 0.2rem;
+  background: var(--surface);
+  color: inherit;
   font: inherit;
   text-align: right;
 }
@@ -328,6 +348,8 @@ tr.incomplete th.name::after {
   padding: 0.5rem;
   border: 1px solid var(--line);
   border-radius: 0.25rem;
+  background: var(--surface);
+  color: inherit;
   font: inherit;
   box-sizing: border-box;
 }
@@ -340,6 +362,17 @@ tr.incomplete th.name::after {
 /* Print gives PDF export for free, which is why there is no print window and no
    cloned-stylesheet trick like the page this replaces used. */
 @media print {
+  :root {
+    color-scheme: light;
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --line: #d4d4d4;
+    --paper: #fdfdfc;
+    --surface: #fff;
+    --warn: #8a1c1c;
+    --warn-bg: #fdeeee;
+  }
+
   body {
     padding: 0;
     background: #fff;
