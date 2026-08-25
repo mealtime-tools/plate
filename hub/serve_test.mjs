@@ -119,7 +119,10 @@ test("the page renders its groups and links a recipe to the viewer", async () =>
   assert.equal(await page.locator("span.name").innerText(), "Draft Bake");
   assert.equal(await page.locator(".pending").innerText(), "unresolved");
 
-  const href = await page.locator("a.name").getAttribute("href");
+  const link = page.locator("a.name");
+  assert.equal(await link.getAttribute("target"), "_blank");
+
+  const href = await link.getAttribute("href");
   const decoded = await recipeFromHash(new URL(href, origin).hash);
   assert.equal(decoded.name, "Cookie Dough");
   assert.equal(decoded.ingredients[0].kcal, 100);
@@ -129,14 +132,23 @@ test("the page renders its groups and links a recipe to the viewer", async () =>
   await page.close();
 });
 
-test("the linked viewer renders the recipe the index pointed at", async () => {
-  const page = await browser.newPage();
+test("a recipe opens in a new tab, leaving the index up", async () => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
   await page.goto(origin);
   await page.waitForSelector("a.name");
-  await page.locator("a.name").click();
 
-  await page.waitForSelector("#recipe:not([hidden])");
-  assert.equal(await page.title(), "Cookie Dough");
-  assert.equal(await page.locator("#ingredient-rows tr").count(), 1);
-  await page.close();
+  const [viewer] = await Promise.all([
+    context.waitForEvent("page"),
+    page.locator("a.name").click(),
+  ]);
+
+  await viewer.waitForSelector("#recipe:not([hidden])");
+  assert.equal(await viewer.title(), "Cookie Dough");
+  assert.equal(await viewer.locator("#ingredient-rows tr").count(), 1);
+
+  // The list is the thing being browsed, so it has to survive the click.
+  assert.equal(context.pages().length, 2);
+  assert.equal(await page.locator("#total").textContent(), "2");
+  await context.close();
 });
