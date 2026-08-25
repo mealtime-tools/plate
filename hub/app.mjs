@@ -19,18 +19,18 @@ function element(tag, className, text) {
 
 const SVG = "http://www.w3.org/2000/svg";
 
-// The conventional "opens elsewhere" mark: a pane with an arrow leaving its
-// top-right corner, which is what these links do -- another origin, another
-// tab. Drawn here rather than fetched, because `default-src 'none'` blocks an
-// icon file and because vendoring someone's artwork would put an attribution
-// requirement on a repository that ships no third-party runtime assets.
-// Stroked in `currentColor`, so one glyph follows the row's colour in both
-// schemes, and hidden from assistive technology, which reads the link's own
-// label instead.
+// The conventional "opens elsewhere" mark, and it is three strokes: a box with
+// its top-right corner missing, and an arrow leaving through the gap. The
+// arrowhead's two barbs run parallel to the box edges the gap removed, so the
+// head reads as the corner that is not there.
+// Left and bottom edges run the box's full 6; top and right stop at 4.5, three
+// quarters of them, which is what opens the corner wide enough to read. The
+// shaft bisects that gap, and the head's barbs are parallel to the two edges
+// the gap removed, so the head reads as the corner that is not there.
 const EXTERNAL = [
-  "M9 3H4.6A1.6 1.6 0 0 0 3 4.6v6.8A1.6 1.6 0 0 0 4.6 13h6.8A1.6 1.6 0 0 0 13 11.4V7",
-  "M10 3h3v3",
-  "M13 3 8.4 7.6",
+  "M9.5 8v4.5a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1H7",
+  "M7.5 7.5 12.5 2.5",
+  "M9.5 2.5h3v3",
 ];
 
 /** The link glyph, as an inline SVG that inherits the text colour. */
@@ -38,9 +38,12 @@ function externalIcon() {
   const svg = document.createElementNS(SVG, "svg");
   svg.setAttribute("viewBox", "0 0 16 16");
   svg.setAttribute("fill", "none");
+  // currentColor, so one glyph follows the row's colour in both schemes.
   svg.setAttribute("stroke", "currentColor");
-  svg.setAttribute("stroke-width", "1.5");
+  svg.setAttribute("stroke-width", "1.4");
   svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  // Hidden from assistive technology: the link's own label is its name.
   svg.setAttribute("aria-hidden", "true");
 
   for (const d of EXTERNAL) {
