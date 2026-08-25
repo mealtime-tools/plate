@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Same posture as the viewer, with one difference: this page does have an
+       API, on its own origin, so `connect-src 'self'` covers both the recipe
+       listing and the JSON module import recipe.mjs makes. Still nothing
+       off-origin, and still no inline script. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'self'; script-src 'self'; style-src 'self'; img-src data:; base-uri 'none'; form-action 'none'">
+
+  <title>Recipes</title>
+  <link rel="icon" href="data:,">
+  <!-- The viewer's palette and typography, so the two pages read as one. -->
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/hub/hub.css">
+  <script type="module" src="/hub/app.mjs"></script>
+</head>
+
+<body>
+  <main>
+    <h1>Recipes<span id="total" class="count"></span></h1>
+
+    <!-- Failure first in the document, as the viewer does it: a collection
+         that cannot be read is the answer, not something to scroll past. -->
+    <section id="alert" class="alert" hidden>
+      <h2>Problem reading the collection</h2>
+      <p id="alert-body"></p>
+    </section>
+
+    <ul id="categories" class="categories"></ul>
+
+    <p id="empty" class="empty" hidden>No recipes yet.</p>
+  </main>
+</body>
+
+</html>
