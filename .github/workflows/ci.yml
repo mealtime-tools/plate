@@ -7,22 +7,20 @@ on:
     branches: ["main"]
 
 jobs:
-  node:
-    name: Page suite (node)
+  bun:
+    name: Page suite (bun)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "22"
+      - uses: oven-sh/setup-bun@v2
 
       # The page ships no bundler, but the suite drives a real browser.
       - name: Install dev dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
 
       - name: Run the page suite
-        run: npm test
+        run: bun test
