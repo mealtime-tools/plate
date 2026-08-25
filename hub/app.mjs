@@ -17,6 +17,40 @@ function element(tag, className, text) {
   return node;
 }
 
+const SVG = "http://www.w3.org/2000/svg";
+
+// The conventional "opens elsewhere" mark: a pane with an arrow leaving its
+// top-right corner, which is what these links do -- another origin, another
+// tab. Drawn here rather than fetched, because `default-src 'none'` blocks an
+// icon file and because vendoring someone's artwork would put an attribution
+// requirement on a repository that ships no third-party runtime assets.
+// Stroked in `currentColor`, so one glyph follows the row's colour in both
+// schemes, and hidden from assistive technology, which reads the link's own
+// label instead.
+const EXTERNAL = [
+  "M9 3H4.6A1.6 1.6 0 0 0 3 4.6v6.8A1.6 1.6 0 0 0 4.6 13h6.8A1.6 1.6 0 0 0 13 11.4V7",
+  "M10 3h3v3",
+  "M13 3 8.4 7.6",
+];
+
+/** The link glyph, as an inline SVG that inherits the text colour. */
+function externalIcon() {
+  const svg = document.createElementNS(SVG, "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.5");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("aria-hidden", "true");
+
+  for (const d of EXTERNAL) {
+    const path = document.createElementNS(SVG, "path");
+    path.setAttribute("d", d);
+    svg.append(path);
+  }
+  return svg;
+}
+
 /** The servings-and-figures line, or the reason there is none. */
 function meta(entry) {
   const servings = `${entry.servings} serving${entry.servings === 1 ? "" : "s"}`;
@@ -55,6 +89,20 @@ function row(entry) {
   }
 
   item.append(meta(entry));
+
+  // An anchor, not a copy button: right-click copies it, a phone's long-press
+  // offers to share it, and the browser needs no help from us to do either.
+  // Last in the row and fixed width, so a long name cannot shunt it out of line.
+  if (entry.publicUrl) {
+    const share = element("a", "share");
+    share.append(externalIcon());
+    share.href = entry.publicUrl;
+    share.target = "_blank";
+    share.title = "Public link";
+    share.setAttribute("aria-label", `Public link to ${entry.name}`);
+    item.append(share);
+  }
+
   return item;
 }
 
@@ -89,7 +137,10 @@ async function main() {
     return;
   }
 
-  const groups = await groupByCategory(payload.recipes, payload.viewer);
+  const groups = await groupByCategory(payload.recipes, {
+    viewer: payload.viewer,
+    publicViewer: payload.publicViewer,
+  });
   const total = groups.reduce((count, item) => count + item.entries.length, 0);
 
   document.getElementById("total").textContent = String(total);

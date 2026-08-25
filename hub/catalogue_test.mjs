@@ -63,19 +63,12 @@ test("recipes sort by name inside a category", async () => {
 });
 
 test("an entry carries per-serving figures", async () => {
-  const entry = await entryOf(payload("Cone", { servings: 2 }), "/view");
+  const entry = await entryOf(payload("Cone", { servings: 2 }), { viewer: "/view" });
 
   assert.equal(entry.name, "Cone");
   assert.equal(entry.servings, 2);
   assert.equal(entry.kcal, 50);
   assert.equal(entry.protein, 2.5);
-});
-
-test("an unresolved recipe gets no figures and no link", async () => {
-  const entry = await entryOf(payload("Draft", { resolved: false }), "/view");
-
-  assert.equal(entry.kcal, null);
-  assert.equal(entry.url, "");
 });
 
 test("a share link round-trips through the viewer's own codec", async () => {
@@ -88,4 +81,35 @@ test("a share link round-trips through the viewer's own codec", async () => {
   const decoded = await recipeFromHash(new URL(url, "http://x").hash);
   assert.equal(decoded.name, "Cone");
   assert.equal(decoded.ingredients[0].kcal, 100);
+});
+
+test("a row carries a public link alongside the local one", async () => {
+  const entry = await entryOf(payload("Cone"), {
+    viewer: "/view",
+    publicViewer: "https://example.test/plate/",
+  });
+
+  assert.equal(entry.url.startsWith("/view#r="), true);
+  assert.equal(entry.publicUrl.startsWith("https://example.test/plate/#r="), true);
+
+  // One payload, so both links must carry the same recipe.
+  assert.equal(entry.url.split("#r=")[1], entry.publicUrl.split("#r=")[1]);
+});
+
+test("an unresolved recipe gets no figures and neither link", async () => {
+  const entry = await entryOf(payload("Draft", { resolved: false }), {
+    viewer: "/view",
+    publicViewer: "https://example.test/plate/",
+  });
+
+  assert.equal(entry.kcal, null);
+  assert.equal(entry.url, "");
+  assert.equal(entry.publicUrl, "");
+});
+
+test("a missing public viewer leaves the public link out", async () => {
+  const entry = await entryOf(payload("Cone"), { viewer: "/view" });
+
+  assert.equal(entry.url.startsWith("/view#r="), true);
+  assert.equal(entry.publicUrl, "");
 });

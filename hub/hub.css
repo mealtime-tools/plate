@@ -74,6 +74,28 @@ a.name:focus {
   font-variant-numeric: tabular-nums;
 }
 
+/* Fixed width and centred, so rows stay aligned whatever the name's length.
+   A larger tap target than the glyph, for a thumb on a phone. */
+.share {
+  display: flex;
+  flex: 0 0 1.75rem;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  height: 1.75rem;
+  color: var(--muted);
+}
+
+.share svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.share:hover,
+.share:focus {
+  color: var(--ink);
+}
+
 /* An unresolved recipe is a state, not a figure: it must not read as data. */
 .pending {
   font-style: italic;
