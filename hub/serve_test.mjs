@@ -61,6 +61,7 @@ test("the API reports recipes written after startup", async () => {
   assert.equal(body.recipes.length, 1);
   assert.equal(body.recipes[0].name, "Cookie Dough");
   assert.equal(body.viewer, "/view");
+  assert.equal(body.publicViewer, "https://mealtime-tools.github.io/plate/");
 });
 
 test("an unreadable collection is a 500 naming the file", async () => {
@@ -122,10 +123,32 @@ test("the page renders its groups and links a recipe to the viewer", async () =>
   const link = page.locator("a.name");
   assert.equal(await link.getAttribute("target"), "_blank");
 
+  // The second link is the same recipe under the public origin, so it can be
+  // copied or shared with someone who is not on this network.
+  const share = page.locator("li", { has: link }).locator("a.share");
+  const shareHref = await share.getAttribute("href");
+  assert.equal(
+    shareHref.startsWith("https://mealtime-tools.github.io/plate/#r="),
+    true,
+  );
+  assert.equal(
+    await share.getAttribute("aria-label"),
+    "Public link to Cookie Dough",
+  );
+
+  // The glyph must not compete with that label for the accessible name.
+  assert.equal(await share.locator("svg").getAttribute("aria-hidden"), "true");
+
   const href = await link.getAttribute("href");
   const decoded = await recipeFromHash(new URL(href, origin).hash);
   assert.equal(decoded.name, "Cookie Dough");
   assert.equal(decoded.ingredients[0].kcal, 100);
+
+  // Both links must carry one recipe, not two encodings of it.
+  assert.equal(new URL(shareHref).hash, new URL(href, origin).hash);
+
+  // The unresolved recipe has no public link either.
+  assert.equal(await page.locator("a.share").count(), 1);
 
   assert.deepEqual(errors, []);
   assert.deepEqual(offsite, []);

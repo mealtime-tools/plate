@@ -32,6 +32,11 @@ const FILES = new Map([
 
 const API = "/api/recipes";
 
+// Where a recipe can be read by someone who is not on this network. The
+// fragment is the whole recipe, so a public link is this deployment's link
+// under another origin; only the origin has to be configured.
+const PUBLIC_VIEWER = "https://mealtime-tools.github.io/plate/";
+
 /** Private data on a LAN address: never let a proxy hold a copy. */
 const NO_STORE = { "Cache-Control": "no-store" };
 
@@ -40,9 +45,9 @@ function json(body, status = 200) {
 }
 
 /** The collection as the page wants it, or the refusal that stopped it. */
-async function listing(directory, viewer) {
+async function listing(directory, bases) {
   try {
-    return json({ viewer, recipes: await readCollection(directory) });
+    return json({ ...bases, recipes: await readCollection(directory) });
   } catch (error) {
     // One unreadable file refuses the whole directory rather than quietly
     // serving a short list, so the refusal is what the page shows.
@@ -54,13 +59,19 @@ async function listing(directory, viewer) {
 }
 
 /** The server, bound but for the caller to stop. `port: 0` picks one. */
-export function serve({ directory, viewer = "/view", port = 8080, hostname = "0.0.0.0" }) {
+export function serve({
+  directory,
+  viewer = "/view",
+  publicViewer = PUBLIC_VIEWER,
+  port = 8080,
+  hostname = "0.0.0.0",
+}) {
   return Bun.serve({
     port,
     hostname,
     async fetch(request) {
       const { pathname } = new URL(request.url);
-      if (pathname === API) return listing(directory, viewer);
+      if (pathname === API) return listing(directory, { viewer, publicViewer });
 
       const file = FILES.get(pathname);
       if (!file) return new Response("not found\n", { status: 404 });
@@ -83,6 +94,7 @@ if (import.meta.main) {
   const server = serve({
     directory,
     viewer: process.env.VIEWER_URL || "/view",
+    publicViewer: process.env.PUBLIC_VIEWER_URL || PUBLIC_VIEWER,
     port: Number(process.env.PORT ?? 8080),
     hostname: process.env.HOST ?? "0.0.0.0",
   });

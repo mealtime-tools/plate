@@ -74,6 +74,31 @@ a.name:focus {
   font-variant-numeric: tabular-nums;
 }
 
+/* Fixed width and centred, so rows stay aligned whatever the name's length.
+   A larger tap target than the glyph, for a thumb on a phone. */
+/* `stretch`, not `center`: the row aligns its text on the baseline, which makes
+   the flex line taller than the glyph, and centring inside that line left the
+   icon sitting low. Stretching to the line and centring within it is what puts
+   the glyph level with the text. */
+.share {
+  display: flex;
+  flex: 0 0 1.75rem;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  color: var(--muted);
+}
+
+.share svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.share:hover,
+.share:focus {
+  color: var(--ink);
+}
+
 /* An unresolved recipe is a state, not a figure: it must not read as data. */
 .pending {
   font-style: italic;

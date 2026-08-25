@@ -17,6 +17,43 @@ function element(tag, className, text) {
   return node;
 }
 
+const SVG = "http://www.w3.org/2000/svg";
+
+// The conventional "opens elsewhere" mark, and it is three strokes: a box with
+// its top-right corner missing, and an arrow leaving through the gap. The
+// arrowhead's two barbs run parallel to the box edges the gap removed, so the
+// head reads as the corner that is not there.
+// Left and bottom edges run the box's full 6; top and right stop at 4.5, three
+// quarters of them, which is what opens the corner wide enough to read. The
+// shaft bisects that gap, and the head's barbs are parallel to the two edges
+// the gap removed, so the head reads as the corner that is not there.
+const EXTERNAL = [
+  "M9.5 8v4.5a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1H7",
+  "M7.5 7.5 12.5 2.5",
+  "M9.5 2.5h3v3",
+];
+
+/** The link glyph, as an inline SVG that inherits the text colour. */
+function externalIcon() {
+  const svg = document.createElementNS(SVG, "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("fill", "none");
+  // currentColor, so one glyph follows the row's colour in both schemes.
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.4");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  // Hidden from assistive technology: the link's own label is its name.
+  svg.setAttribute("aria-hidden", "true");
+
+  for (const d of EXTERNAL) {
+    const path = document.createElementNS(SVG, "path");
+    path.setAttribute("d", d);
+    svg.append(path);
+  }
+  return svg;
+}
+
 /** The servings-and-figures line, or the reason there is none. */
 function meta(entry) {
   const servings = `${entry.servings} serving${entry.servings === 1 ? "" : "s"}`;
@@ -55,6 +92,20 @@ function row(entry) {
   }
 
   item.append(meta(entry));
+
+  // An anchor, not a copy button: right-click copies it, a phone's long-press
+  // offers to share it, and the browser needs no help from us to do either.
+  // Last in the row and fixed width, so a long name cannot shunt it out of line.
+  if (entry.publicUrl) {
+    const share = element("a", "share");
+    share.append(externalIcon());
+    share.href = entry.publicUrl;
+    share.target = "_blank";
+    share.title = "Public link";
+    share.setAttribute("aria-label", `Public link to ${entry.name}`);
+    item.append(share);
+  }
+
   return item;
 }
 
@@ -89,7 +140,10 @@ async function main() {
     return;
   }
 
-  const groups = await groupByCategory(payload.recipes, payload.viewer);
+  const groups = await groupByCategory(payload.recipes, {
+    viewer: payload.viewer,
+    publicViewer: payload.publicViewer,
+  });
   const total = groups.reduce((count, item) => count + item.entries.length, 0);
 
   document.getElementById("total").textContent = String(total);

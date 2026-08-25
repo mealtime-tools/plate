@@ -51,14 +51,24 @@ export function labelFor(category) {
   );
 }
 
-/** The one link that carries this recipe, written by the viewer's own codec. */
-export async function shareUrl(payload, viewer) {
-  const encoded = await encodePayload(recipeToPayload(readRecipe(payload)));
-  return `${viewer}#r=${encoded}`;
+/** This recipe as a fragment payload, written by the viewer's own codec. */
+export async function encodedPayload(payload) {
+  return encodePayload(recipeToPayload(readRecipe(payload)));
 }
 
-/** One recipe as a row: per-serving figures, and a link when it has one. */
-export async function entryOf(payload, viewer) {
+/** The one link that carries this recipe, under any viewer base. */
+export async function shareUrl(payload, viewer) {
+  return `${viewer}#r=${await encodedPayload(payload)}`;
+}
+
+/** One recipe as a row: per-serving figures, and the links it has.
+ *
+ * Two links, one payload: the row points at the viewer this deployment serves,
+ * and at the public one, which is the same fragment under another origin. They
+ * are anchors rather than a copy button because a browser already knows how to
+ * copy, open and share a URL, and a URL is a place rather than an action.
+ */
+export async function entryOf(payload, { viewer = "", publicViewer = "" } = {}) {
   const recipe = readRecipe(payload);
   const totals = recipeTotals(recipe);
 
@@ -71,10 +81,15 @@ export async function entryOf(payload, viewer) {
       ? perServing(totals[key], recipe.servings)
       : null;
 
+  // Encoded once and reused: deflating the same payload twice to write two
+  // URLs would be pure waste, and both links must carry the same fragment.
+  const encoded = totals ? await encodedPayload(payload) : "";
+
   return {
     name: recipe.name,
     servings: recipe.servings,
-    url: totals ? await shareUrl(payload, viewer) : "",
+    url: encoded ? `${viewer}#r=${encoded}` : "",
+    publicUrl: encoded && publicViewer ? `${publicViewer}#r=${encoded}` : "",
     kcal: figure("kcal"),
     protein: figure("protein"),
     fat: figure("fat"),
@@ -83,7 +98,7 @@ export async function entryOf(payload, viewer) {
 }
 
 /** Every recipe under its category heading, authored order first. */
-export async function groupByCategory(payloads, viewer = "") {
+export async function groupByCategory(payloads, bases = {}) {
   const buckets = new Map();
   for (const payload of payloads) {
     const key = categoryOf(payload);
@@ -103,7 +118,7 @@ export async function groupByCategory(payloads, viewer = "") {
           .get(key)
           .slice()
           .sort((a, b) => String(a.name).localeCompare(String(b.name)))
-          .map((payload) => entryOf(payload, viewer)),
+          .map((payload) => entryOf(payload, bases)),
       ),
     })),
   );
