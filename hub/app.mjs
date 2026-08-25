@@ -46,6 +46,9 @@ function row(entry) {
   if (entry.url) {
     const link = element("a", "name", entry.name);
     link.href = entry.url;
+    // A new tab, because the index is a browse view: cooking from one recipe
+    // should not cost the list you found it in.
+    link.target = "_blank";
     item.append(link);
   } else {
     item.append(element("span", "name", entry.name));
