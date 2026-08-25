@@ -1,4 +1,7 @@
 node_modules/
+# bun migrates package-lock.json on install; that copy is a build artefact.
+# Committing both lockfiles is how they drift.
+bun.lock
 .env
 __pycache__/
 *.py[cod]

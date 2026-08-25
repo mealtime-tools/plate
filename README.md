@@ -28,7 +28,9 @@ makes none off-origin. Update it by copying a regenerated `nutrients.json`
 over this one and running the suite. The page still shows four macro columns;
 the wider vocabulary is arithmetic and wire format only.
 
-Run the small contract suite with `npm test`. GitHub Pages deploys the five
+Run the small contract suite with `bun test`. The tests are written against
+`node:test` and `node:assert`, not a runner's own API, so they run unchanged
+under `node --test "tests/*_test.mjs"` too. GitHub Pages deploys the five
 runtime files directly: `index.html`, `style.css`, `app.mjs`, `recipe.mjs`, and
 `nutrients.json`.
 
