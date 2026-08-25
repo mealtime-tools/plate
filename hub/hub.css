@@ -1,0 +1,86 @@
+/* Index-only rules. The palette, typography and `main` width come from the
+   viewer's style.css, which this page loads first. */
+
+h1 {
+  text-align: left;
+}
+
+/* A count sits with its heading, so a group's size reads without counting. */
+.count {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.categories,
+.categories ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.categories > li {
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.categories h2 {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.categories ul > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.categories ul > li:last-child {
+  border-bottom: 0;
+}
+
+.name {
+  flex: 1 1 12rem;
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+a.name:hover,
+a.name:focus {
+  text-decoration: underline;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* An unresolved recipe is a state, not a figure: it must not read as data. */
+.pending {
+  font-style: italic;
+}
+
+.empty {
+  padding: 2rem;
+  color: var(--muted);
+  text-align: center;
+}
