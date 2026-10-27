@@ -20,7 +20,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install Chromium for Playwright
-        run: bunx playwright install --with-deps chromium
+        # The locked playwright-core, so the browser build matches the one it drives.
+        run: bunx playwright-core install --with-deps chromium
 
       - name: Run the page suite
         run: bun test
