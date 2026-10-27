@@ -96,7 +96,7 @@ test("missing nutrients are null while explicit zero totals as zero", () => {
   })).kcal, 200);
 });
 
-test("optional nutrients total only when every ingredient states them", () => {
+test("an optional nutrient some ingredients omit totals as a flagged floor", () => {
   const oats = {
     name: "Oats",
     grams: 100,
@@ -126,15 +126,18 @@ test("optional nutrients total only when every ingredient states them", () => {
   assert.equal(scaleIngredient(readRecipe({ ingredients: [oats] })
     .ingredients[0]).fiber, 10.6);
 
-  // Milk states no fibre, so a fibre total would under-report: omit the key.
+  assert.deepEqual(stated.partial, []);
+
+  // Milk states no fibre, so the fibre total is the oats' alone: a floor.
   const mixed = recipeTotals(readRecipe({ ingredients: [oats, milk] }));
-  assert.equal("fiber" in mixed, false);
+  assert.equal(mixed.fiber, 10.6);
+  assert.deepEqual(mixed.partial, ["fiber"]);
   assert.equal(mixed.sodium, 94);
   assert.equal(mixed.sugar, 12.9);
   assert.equal(mixed.kcal, 473);
 });
 
-test("a nutrient beyond the macros round-trips and totals all or nothing", async () => {
+test("a nutrient beyond the macros round-trips and totals as a floor", async () => {
   const tofu = {
     name: "Tofu",
     grams: 200,
@@ -159,11 +162,12 @@ test("a nutrient beyond the macros round-trips and totals all or nothing", async
   assert.deepEqual(payload.ingredients[0], tofu);
   assert.deepEqual(payload.ingredients[1], oil);
 
-  // Oil states no calcium, so omit the key: the macros' rule, over the whole vocabulary.
+  // Oil states no calcium, so its total is a floor: the same rule, over the whole vocabulary.
   const totals = recipeTotals(
     readRecipe(await decodePayload(await encodePayload(payload))),
   );
-  assert.equal("calcium" in totals, false);
+  assert.equal(totals.calcium, 0.7);
+  assert.deepEqual(totals.partial, ["calcium"]);
   assert.equal(totals.saturated_fat, 4);
   assert.equal(totals.kcal, 376);
 });

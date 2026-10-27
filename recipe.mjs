@@ -201,18 +201,21 @@ export function scaleIngredient(ingredient) {
 export function recipeTotals(recipe) {
   if (recipe.problems.length) return null;
 
-  // All or nothing per nutrient: a partial sum would under-report.
+  // Any stated reading makes a total; `partial` names the floors with gaps.
   const scaled = recipe.ingredients.map(scaleIngredient);
-  const keys = NUTRIENT_KEYS.filter(
-    (key) => !scaled.some((values) => values[key] === null),
+  const keys = NUTRIENT_KEYS.filter((key) =>
+    scaled.some((values) => values[key] !== null),
+  );
+  const partial = keys.filter((key) =>
+    scaled.some((values) => values[key] === null),
   );
 
   const totals = { grams: 0, ...Object.fromEntries(keys.map((k) => [k, 0])) };
   recipe.ingredients.forEach((ingredient, index) => {
     totals.grams += ingredient.grams;
-    for (const key of keys) totals[key] += scaled[index][key];
+    for (const key of keys) totals[key] += scaled[index][key] ?? 0;
   });
-  return totals;
+  return { ...totals, partial };
 }
 
 /** One serving's share of a total. */
